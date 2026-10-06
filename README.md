@@ -1,4 +1,4 @@
-# Rota Segura
+# Pace
 
 App mobile para corredores que ajuda a escolher rotas mais seguras na cidade. Cada rota recebe uma nota (score) com base em indicadores como segurança, trânsito, limpeza e conservação, e a comunidade pode publicar alertas sobre o que encontra pelo caminho.
 

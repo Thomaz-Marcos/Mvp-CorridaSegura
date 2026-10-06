@@ -38,7 +38,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "profile", label: "Perfil" },
 ];
 
-// Protótipo navegável das telas do Figma "Rota Segura": só troca de tela, sem lógica.
+// Protótipo navegável das telas do app Pace: só troca de tela, sem lógica.
 export default function App() {
   const [fontsLoaded] = useFonts({
     Outfit_300Light,

@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Rota Segura",
-    "slug": "rota-segura-app",
+    "name": "Pace",
+    "slug": "pace-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",

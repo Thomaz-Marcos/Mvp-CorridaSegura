@@ -65,7 +65,7 @@ export default function OnboardingScreen({ onFinish }: Props) {
             <Texto tamanho={30}>⚡</Texto>
           </View>
           <Texto tamanho={24} peso="black">
-            Run<Texto tamanho={24} peso="black" cor={cores.accent}>Safe</Texto>
+            Pace<Texto tamanho={24} peso="black" cor={cores.accent}>.</Texto>
           </Texto>
           <Texto tamanho={12} cor={cores.muted} style={{ marginTop: 4 }}>
             {isLogin ? "Entre na sua conta" : "Crie sua conta grátis"}

@@ -40,7 +40,7 @@ export default function MapScreen() {
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
           <View>
             <Texto tamanho={20} peso="black">
-              Run<Texto tamanho={20} peso="black" cor={cores.accent}>Safe</Texto>
+              Pace<Texto tamanho={20} peso="black" cor={cores.accent}>.</Texto>
             </Texto>
             <Texto tamanho={11} cor={cores.muted}>São Paulo, SP · Agora</Texto>
           </View>
