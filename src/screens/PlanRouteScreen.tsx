@@ -223,7 +223,7 @@ export default function PlanRouteScreen({ onStartRun }: Props) {
             })}
 
             <Pressable onPress={onStartRun} style={{ paddingVertical: 16, borderRadius: 16, alignItems: "center", backgroundColor: cores.accent }}>
-              <Texto tamanho={14} peso="black" cor="#000">▶ Iniciar com "{selected.name}"</Texto>
+              <Texto tamanho={14} peso="black" cor="#000">▶ Iniciar com “{selected.name}”</Texto>
             </Pressable>
           </>
         )}
