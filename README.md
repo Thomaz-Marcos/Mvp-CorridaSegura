@@ -7,7 +7,7 @@ App mobile para corredores que ajuda a escolher rotas mais seguras na cidade. Ca
 ## Telas
 
 | Tela | O que mostra |
-|---|---|
+| --- | --- |
 | **Onboarding** | Apresentação do app, criação de conta e login |
 | **Mapa** | Mapa da região com alertas próximos e rotas sugeridas |
 | **Planejar** | Busca de destino e rotas favoritas com score |
@@ -46,7 +46,7 @@ npm run web       # navegador
 
 ## Estrutura do projeto
 
-```
+```text
 ├── App.tsx              # navegação entre as telas (abas, onboarding e corrida ativa)
 ├── index.ts             # ponto de entrada
 ├── app.json             # configuração do Expo
