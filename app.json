@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "rota-segura-app",
+    "name": "Rota Segura",
     "slug": "rota-segura-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "ios": {
       "supportsTablet": true
     },
@@ -20,6 +20,10 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-font"
+    ],
+    "backgroundColor": "#0d0d12"
   }
 }
