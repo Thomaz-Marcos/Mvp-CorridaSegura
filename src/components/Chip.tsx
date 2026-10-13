@@ -8,7 +8,7 @@ interface Props {
   onPress?: () => void;
 }
 
-// Filtro em formato de pílula ("Todas", "🛡️ Seguras"...). Só visual.
+// Filtro ("Todas", "Seguras"...): ativo fica preenchido, os outros só com contorno. Só visual.
 export default function Chip({ label, ativo, onPress }: Props) {
   return (
     <Pressable
@@ -16,11 +16,13 @@ export default function Chip({ label, ativo, onPress }: Props) {
       style={{
         paddingHorizontal: 12,
         paddingVertical: 6,
-        borderRadius: 999,
-        backgroundColor: ativo ? cores.accent : cores.surface2,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: ativo ? cores.surface3 : cores.border,
+        backgroundColor: ativo ? cores.surface3 : "transparent",
       }}
     >
-      <Texto tamanho={11} peso="semibold" cor={ativo ? "#000" : cores.muted}>
+      <Texto tamanho={12} peso="medium" cor={ativo ? cores.text : cores.muted}>
         {label}
       </Texto>
     </Pressable>

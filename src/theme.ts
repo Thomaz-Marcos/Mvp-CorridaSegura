@@ -1,22 +1,22 @@
-// Tokens copiados do src/index.css do Figma Make (Rota Segura / RunSafe).
+// Escuro sóbrio: cinzas neutros, um só destaque (verde) e cores de dados pouco saturadas.
 export const cores = {
-  bg: "#0d0d12",
-  surface: "#16161f",
-  surface2: "#1e1e2a",
-  surface3: "#252535",
-  border: "#2a2a3a",
-  text: "#f0f0f5",
-  muted: "#7878a0",
-  accent: "#00e87a",
-  accentDim: "#00e87a22",
-  accent2: "#7c6fff",
-  accent2Dim: "#7c6fff22",
-  safety: "#00e87a",
-  traffic: "#f59e0b",
-  clean: "#38bdf8",
-  conserv: "#fb923c",
-  danger: "#f43f5e",
-  warn: "#facc15",
+  bg: "#121212",
+  surface: "#1a1a1a",
+  surface2: "#222222",
+  surface3: "#2b2b2b",
+  border: "#2e2e2e",
+  text: "#ececec",
+  muted: "#9a9a9a",
+  accent: "#4cc38a",
+  accentDim: "#4cc38a22",
+  accent2: "#d4d4d4",
+  accent2Dim: "#d4d4d422",
+  safety: "#4cc38a",
+  traffic: "#d9a441",
+  clean: "#6aa9d8",
+  conserv: "#d98a5b",
+  danger: "#e5534b",
+  warn: "#d9b441",
 };
 
 // Cada peso é uma família própria (no Android não dá para usar fontWeight com fonte carregada).
@@ -35,8 +35,8 @@ export const fontes = {
 
 // Os quatro indicadores que aparecem em quase todas as telas.
 export const INDICADORES = [
-  { chave: "safety", label: "Segurança", icone: "🛡️", cor: cores.safety, desc: "Criminalidade e fluxo de pedestres" },
-  { chave: "traffic", label: "Trânsito", icone: "🚦", cor: cores.traffic, desc: "Volume de veículos na via" },
-  { chave: "clean", label: "Limpeza", icone: "🧹", cor: cores.clean, desc: "Acúmulo de lixo e resíduos" },
-  { chave: "conserv", label: "Conservação", icone: "🛤️", cor: cores.conserv, desc: "Estado da calçada e pavimento" },
+  { chave: "safety", label: "Segurança", cor: cores.safety, desc: "Criminalidade e fluxo de pedestres" },
+  { chave: "traffic", label: "Trânsito", cor: cores.traffic, desc: "Volume de veículos na via" },
+  { chave: "clean", label: "Limpeza", cor: cores.clean, desc: "Acúmulo de lixo e resíduos" },
+  { chave: "conserv", label: "Conservação", cor: cores.conserv, desc: "Estado da calçada e pavimento" },
 ] as const;

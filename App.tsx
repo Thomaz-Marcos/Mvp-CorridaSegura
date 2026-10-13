@@ -84,12 +84,12 @@ export default function App() {
           <View style={{ flexDirection: "row", justifyContent: "space-around", paddingHorizontal: 8, paddingTop: 12, paddingBottom: 8 }}>
             {TABS.map((t) => {
               const ativa = tab === t.id;
-              const cor = ativa ? cores.accent : cores.muted;
+              const cor = ativa ? cores.text : cores.muted;
               return (
                 <Pressable
                   key={t.id}
                   onPress={() => setTab(t.id)}
-                  style={{ alignItems: "center", gap: 4, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12, backgroundColor: ativa ? cores.accentDim : "transparent" }}
+                  style={{ alignItems: "center", gap: 4, paddingHorizontal: 12, paddingVertical: 4 }}
                 >
                   <IconeAba id={t.id} cor={cor} />
                   <Texto tamanho={10} peso="semibold" cor={cor} style={{ letterSpacing: 0.3 }}>{t.label}</Texto>

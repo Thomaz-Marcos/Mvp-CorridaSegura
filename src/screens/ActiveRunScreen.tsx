@@ -1,9 +1,9 @@
 import { Pressable, View } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import Svg, { Circle, Defs, Ellipse, Line, LinearGradient as SvgGradient, Path, Rect, Stop } from "react-native-svg";
-import { cores } from "../theme";
+import Svg, { Circle, Ellipse, Line, Path, Rect } from "react-native-svg";
+import { cores, INDICADORES } from "../theme";
 import Texto, { Rotulo } from "../components/Texto";
 import Barra from "../components/Barra";
+import { IconeAlerta, IconePausa, IconeParar } from "../components/Icones";
 
 interface Props {
   onFinish: () => void;
@@ -13,146 +13,76 @@ interface Props {
 const TEMPO = "14:32";
 const DISTANCIA = 2.64;
 const PROGRESSO = DISTANCIA / 5.2;
-const ALERTA = { icon: "⚠️", color: "#facc15", text: "Buraco detectado à frente — atenção!" };
+const ALERTA = "Buraco na calçada a 200 m";
+const TRECHO = [88, 72, 91, 79];
+
+const PAINEL = { backgroundColor: "rgba(18,18,18,0.92)", borderWidth: 1, borderColor: cores.border, borderRadius: 10 };
 
 export default function ActiveRunScreen({ onFinish }: Props) {
   return (
     <View style={{ flex: 1, backgroundColor: cores.bg }}>
       {/* Mapa (desenho) */}
-      <View style={{ height: 260, overflow: "hidden", backgroundColor: "#0a0a18" }}>
+      <View style={{ height: 260, overflow: "hidden", backgroundColor: cores.bg }}>
         <MapaCorrida progresso={PROGRESSO} />
 
-        <View style={{ position: "absolute", top: 0, left: 0, right: 0, flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 16, paddingTop: 16 }}>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 8,
-              paddingHorizontal: 12,
-              paddingVertical: 6,
-              borderRadius: 999,
-              backgroundColor: "rgba(22,22,31,0.9)",
-              borderWidth: 1,
-              borderColor: cores.border,
-            }}
-          >
-            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: cores.accent }} />
-            <Texto tamanho={12} peso="bold" cor={cores.accent}>Gravando</Texto>
+        <View style={{ position: "absolute", top: 12, left: 12, right: 12, flexDirection: "row", justifyContent: "space-between" }}>
+          <View style={[PAINEL, { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 10, paddingVertical: 6 }]}>
+            <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: cores.danger }} />
+            <Texto tamanho={12} peso="medium">Gravando</Texto>
           </View>
-          <Pressable
-            onPress={onFinish}
-            style={{
-              paddingHorizontal: 12,
-              paddingVertical: 6,
-              borderRadius: 999,
-              backgroundColor: "rgba(244,63,94,0.15)",
-              borderWidth: 1,
-              borderColor: "rgba(244,63,94,0.4)",
-            }}
-          >
-            <Texto tamanho={12} peso="bold" cor={cores.danger}>Encerrar</Texto>
-          </Pressable>
+          <View style={[PAINEL, { paddingHorizontal: 10, paddingVertical: 6 }]}>
+            <Texto tamanho={12} cor={cores.muted}>Nota do trecho <Texto tamanho={12} peso="semibold">84</Texto></Texto>
+          </View>
         </View>
 
         {/* Aviso que aparece durante a corrida */}
-        <View
-          style={{
-            position: "absolute",
-            bottom: 12,
-            left: 12,
-            maxWidth: "58%",
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 8,
-            paddingHorizontal: 12,
-            paddingVertical: 10,
-            borderRadius: 16,
-            backgroundColor: ALERTA.color + "20",
-            borderWidth: 1,
-            borderColor: ALERTA.color + "50",
-          }}
-        >
-          <Texto tamanho={14}>{ALERTA.icon}</Texto>
-          <Texto tamanho={12} peso="semibold" cor={ALERTA.color} style={{ flexShrink: 1 }}>{ALERTA.text}</Texto>
-        </View>
-
-        <View
-          style={{
-            position: "absolute",
-            bottom: 12,
-            right: 12,
-            paddingHorizontal: 12,
-            paddingVertical: 6,
-            borderRadius: 999,
-            backgroundColor: "rgba(22,22,31,0.92)",
-            borderWidth: 1,
-            borderColor: cores.border,
-          }}
-        >
-          <Texto tamanho={12} peso="bold" cor={cores.accent}>
-            🛡️ Score atual: <Texto tamanho={12} peso="bold" mono cor={cores.accent}>84</Texto>
-          </Texto>
+        <View style={[PAINEL, { position: "absolute", bottom: 12, left: 12, right: 12, flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 12, paddingVertical: 10 }]}>
+          <IconeAlerta cor={cores.warn} tamanho={16} />
+          <Texto tamanho={13} style={{ flexShrink: 1 }}>{ALERTA}</Texto>
         </View>
       </View>
 
       {/* Progresso */}
-      <View style={{ paddingHorizontal: 20, paddingVertical: 12, backgroundColor: cores.surface, borderBottomWidth: 1, borderColor: cores.border }}>
-        <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 6 }}>
-          <Texto tamanho={10} peso="semibold" cor={cores.muted}>Progresso da rota</Texto>
-          <Texto tamanho={10} peso="bold" mono cor={cores.accent}>{DISTANCIA.toFixed(2)} / 5.20 km</Texto>
+      <View style={{ paddingHorizontal: 20, paddingVertical: 12, gap: 8, borderBottomWidth: 1, borderColor: cores.border }}>
+        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+          <Texto tamanho={12} cor={cores.muted}>Progresso da rota</Texto>
+          <Texto tamanho={12} cor={cores.muted}>{DISTANCIA.toFixed(2)} de 5.20 km</Texto>
         </View>
-        <View style={{ height: 8, borderRadius: 4, overflow: "hidden", backgroundColor: cores.surface2 }}>
-          <LinearGradient
-            colors={[cores.accent, cores.accent2]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={{ width: `${PROGRESSO * 100}%`, height: "100%", borderRadius: 4 }}
-          />
-        </View>
+        <Barra valor={PROGRESSO * 100} cor={cores.accent} altura={4} fundo={cores.surface3} />
       </View>
 
       {/* Números */}
-      <View style={{ paddingHorizontal: 16, paddingVertical: 20 }}>
-        <View style={{ alignItems: "center", marginBottom: 20 }}>
-          <Rotulo style={{ marginBottom: 4 }}>Tempo</Rotulo>
-          <Texto tamanho={48} peso="black" mono>{TEMPO}</Texto>
+      <View style={{ paddingHorizontal: 16, paddingVertical: 20, gap: 20 }}>
+        <View style={{ alignItems: "center" }}>
+          <Texto tamanho={13} cor={cores.muted}>Tempo</Texto>
+          <Texto tamanho={56} peso="bold" mono style={{ lineHeight: 64 }}>{TEMPO}</Texto>
         </View>
 
-        <View style={{ flexDirection: "row", gap: 12, marginBottom: 20 }}>
+        <View style={{ flexDirection: "row", borderRadius: 12, borderWidth: 1, borderColor: cores.border, backgroundColor: cores.surface }}>
           {[
-            { label: "Distância", val: DISTANCIA.toFixed(2), unit: "km", color: cores.accent },
-            { label: "Pace", val: `5'30"`, unit: "/km", color: cores.accent2 },
-            { label: "Calorias", val: "190", unit: "kcal", color: cores.traffic },
-          ].map((s) => (
-            <View
-              key={s.label}
-              style={{ flex: 1, alignItems: "center", paddingVertical: 16, borderRadius: 16, backgroundColor: cores.surface, borderWidth: 1, borderColor: cores.border }}
-            >
-              <Texto tamanho={10} cor={cores.muted} style={{ marginBottom: 4 }}>{s.label}</Texto>
-              <Texto tamanho={20} peso="black" mono cor={s.color}>{s.val}</Texto>
-              <Texto tamanho={10} cor={cores.muted}>{s.unit}</Texto>
+            { label: "Distância", val: DISTANCIA.toFixed(2), unit: "km" },
+            { label: "Pace", val: `5'30"`, unit: "/km" },
+            { label: "Calorias", val: "190", unit: "kcal" },
+          ].map((s, i) => (
+            <View key={s.label} style={{ flex: 1, paddingVertical: 14, paddingHorizontal: 14, gap: 2, borderLeftWidth: i ? 1 : 0, borderColor: cores.border }}>
+              <Texto tamanho={12} cor={cores.muted}>{s.label}</Texto>
+              <Texto tamanho={20} peso="bold">
+                {s.val}<Texto tamanho={12} cor={cores.muted}> {s.unit}</Texto>
+              </Texto>
             </View>
           ))}
         </View>
 
-        <View style={{ borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12, backgroundColor: cores.surface, borderWidth: 1, borderColor: cores.border }}>
-          <Rotulo style={{ marginBottom: 10 }}>Trecho Atual</Rotulo>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", rowGap: 8, columnGap: 8 }}>
-            {[
-              { label: "Segurança", val: 88, color: cores.safety, icon: "🛡️" },
-              { label: "Trânsito", val: 72, color: cores.traffic, icon: "🚦" },
-              { label: "Limpeza", val: 91, color: cores.clean, icon: "🧹" },
-              { label: "Conservação", val: 79, color: cores.conserv, icon: "🛤️" },
-            ].map((m) => (
-              <View key={m.label} style={{ width: "48%", flexGrow: 1, flexDirection: "row", alignItems: "center", gap: 8 }}>
-                <Texto tamanho={12}>{m.icon}</Texto>
-                <View style={{ flex: 1 }}>
-                  <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 2 }}>
-                    <Texto tamanho={10} cor={cores.muted}>{m.label}</Texto>
-                    <Texto tamanho={10} peso="bold" mono cor={m.color}>{m.val}</Texto>
-                  </View>
-                  <Barra valor={m.val} cor={m.color} altura={4} />
+        <View style={{ borderRadius: 12, padding: 16, gap: 12, backgroundColor: cores.surface, borderWidth: 1, borderColor: cores.border }}>
+          <Rotulo>Trecho atual</Rotulo>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", rowGap: 12, columnGap: 16 }}>
+            {INDICADORES.map((ind, i) => (
+              <View key={ind.chave} style={{ width: "46%", flexGrow: 1, gap: 4 }}>
+                <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                  <Texto tamanho={12} cor={cores.muted}>{ind.label}</Texto>
+                  <Texto tamanho={12}>{TRECHO[i]}</Texto>
                 </View>
+                <Barra valor={TRECHO[i]} cor={ind.cor} altura={4} fundo={cores.surface3} />
               </View>
             ))}
           </View>
@@ -161,56 +91,35 @@ export default function ActiveRunScreen({ onFinish }: Props) {
 
       {/* Controles */}
       <View style={{ flex: 1, justifyContent: "flex-end", paddingBottom: 24, paddingHorizontal: 24 }}>
-        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 24 }}>
-          <View
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: 32,
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: cores.surface2,
-              borderWidth: 2,
-              borderColor: cores.border,
-            }}
-          >
-            <Texto tamanho={20} peso="bold">⏸</Texto>
-          </View>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 28 }}>
+          <BotaoRedondo label="Pausar">
+            <IconePausa cor={cores.text} />
+          </BotaoRedondo>
 
-          <Pressable
-            onPress={onFinish}
-            style={{
-              width: 80,
-              height: 80,
-              borderRadius: 40,
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 4,
-              backgroundColor: cores.accent,
-              boxShadow: `0 0 24px ${cores.accent}40`,
-            }}
-          >
-            <Texto tamanho={20} cor="#000">⏹</Texto>
-            <Texto tamanho={9} peso="black" cor="#000" style={{ letterSpacing: 0.5 }}>PARAR</Texto>
+          <Pressable onPress={onFinish} style={{ alignItems: "center", gap: 6 }}>
+            <View style={{ width: 76, height: 76, borderRadius: 38, alignItems: "center", justifyContent: "center", backgroundColor: cores.accent }}>
+              <IconeParar cor="#0b0b0b" tamanho={26} />
+            </View>
+            <Texto tamanho={12} cor={cores.muted}>Encerrar</Texto>
           </Pressable>
 
-          <View
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: 32,
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: "rgba(244,63,94,0.12)",
-              borderWidth: 2,
-              borderColor: "rgba(244,63,94,0.4)",
-            }}
-          >
-            <Texto tamanho={20}>🚨</Texto>
-          </View>
+          <BotaoRedondo label="Alertar">
+            <IconeAlerta cor={cores.danger} tamanho={22} />
+          </BotaoRedondo>
         </View>
       </View>
     </View>
+  );
+}
+
+function BotaoRedondo({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <Pressable style={{ alignItems: "center", gap: 6 }}>
+      <View style={{ width: 60, height: 60, borderRadius: 30, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: cores.border, backgroundColor: cores.surface }}>
+        {children}
+      </View>
+      <Texto tamanho={12} cor={cores.muted}>{label}</Texto>
+    </Pressable>
   );
 }
 
@@ -221,32 +130,26 @@ function MapaCorrida({ progresso }: { progresso: number }) {
 
   return (
     <Svg width="100%" height="100%" viewBox="0 0 390 260" preserveAspectRatio="xMidYMid slice">
-      <Defs>
-        <SvgGradient id="runGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-          <Stop offset="0%" stopColor="#7c6fff" />
-          <Stop offset="100%" stopColor="#00e87a" />
-        </SvgGradient>
-      </Defs>
-      <Rect width={390} height={260} fill="#0d0d1a" />
+      <Rect width={390} height={260} fill="#1c1c1c" />
       {[0, 1, 2, 3, 4].map((i) => (
-        <Line key={`h${i}`} x1={0} y1={50 + i * 52} x2={390} y2={50 + i * 52} stroke="#161626" strokeWidth={10} />
+        <Line key={`h${i}`} x1={0} y1={50 + i * 52} x2={390} y2={50 + i * 52} stroke="#2a2a2a" strokeWidth={10} />
       ))}
       {[0, 1, 2, 3, 4, 5, 6].map((i) => (
-        <Line key={`v${i}`} x1={25 + i * 56} y1={0} x2={25 + i * 56} y2={260} stroke="#161626" strokeWidth={10} />
+        <Line key={`v${i}`} x1={25 + i * 56} y1={0} x2={25 + i * 56} y2={260} stroke="#2a2a2a" strokeWidth={10} />
       ))}
-      <Ellipse cx={220} cy={155} rx={50} ry={38} fill="#001a10" stroke="#00e87a20" strokeWidth={1} />
-      <Path d={PATH} fill="none" stroke="#2a2a3a" strokeWidth={5} strokeLinecap="round" />
+      <Ellipse cx={220} cy={155} rx={50} ry={38} fill="#1b2a21" />
+      <Path d={PATH} fill="none" stroke="#3a3a3a" strokeWidth={5} strokeLinecap="round" />
       <Path
         d={PATH}
         fill="none"
-        stroke="url(#runGrad)"
+        stroke={cores.accent}
         strokeWidth={5}
         strokeLinecap="round"
         strokeDasharray={`${total * progresso} ${total}`}
       />
-      <Circle cx={60} cy={220} r={6} fill="#7c6fff" stroke="#fff" strokeWidth={2} />
+      <Circle cx={60} cy={220} r={5} fill="#ececec" />
       {/* Corredor (ponta do trecho percorrido) */}
-      <Circle cx={298} cy={112} r={7} fill="#00e87a" stroke="#fff" strokeWidth={2.5} />
+      <Circle cx={298} cy={112} r={7} fill={cores.accent} stroke="#fff" strokeWidth={2} />
     </Svg>
   );
 }

@@ -38,15 +38,10 @@ export default function Texto({
   );
 }
 
-// Rótulo de seção em caixa alta e fonte mono ("ROTAS PRÓXIMAS", "TRECHO ATUAL"...).
+// Título de seção ("Rotas próximas", "Trecho atual"...).
 export function Rotulo({ children, style }: { children: React.ReactNode; style?: TextStyle }) {
   return (
-    <Texto
-      tamanho={10}
-      cor={cores.muted}
-      mono
-      style={[{ textTransform: "uppercase", letterSpacing: 2 }, style]}
-    >
+    <Texto tamanho={13} peso="semibold" style={style}>
       {children}
     </Texto>
   );

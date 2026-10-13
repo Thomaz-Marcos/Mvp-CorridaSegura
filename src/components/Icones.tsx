@@ -57,3 +57,61 @@ export function IconeEngrenagem({ cor }: { cor: string }) {
     </Svg>
   );
 }
+
+// Ícones de linha usados no lugar de emoji (traço 2, viewBox 24).
+function Linha({ cor, tamanho = 18, children }: { cor: string; tamanho?: number; children: React.ReactNode }) {
+  return (
+    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none" stroke={cor} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      {children}
+    </Svg>
+  );
+}
+
+export function IconeMais({ cor, tamanho }: { cor: string; tamanho?: number }) {
+  return <Linha cor={cor} tamanho={tamanho}><Path d="M12 5v14M5 12h14" /></Linha>;
+}
+
+export function IconeTrocar({ cor, tamanho = 16 }: { cor: string; tamanho?: number }) {
+  return <Linha cor={cor} tamanho={tamanho}><Path d="M7 4v16M3 8l4-4 4 4M17 20V4M13 16l4 4 4-4" /></Linha>;
+}
+
+export function IconeVoltar({ cor, tamanho = 18 }: { cor: string; tamanho?: number }) {
+  return <Linha cor={cor} tamanho={tamanho}><Path d="M15 18l-6-6 6-6" /></Linha>;
+}
+
+export function IconeAlerta({ cor, tamanho }: { cor: string; tamanho?: number }) {
+  return (
+    <Linha cor={cor} tamanho={tamanho}>
+      <Path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z" />
+      <Path d="M12 9v4M12 17h.01" />
+    </Linha>
+  );
+}
+
+export function IconeCoracao({ cor, tamanho = 16, cheio }: { cor: string; tamanho?: number; cheio?: boolean }) {
+  return (
+    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill={cheio ? cor : "none"} stroke={cor} strokeWidth={2} strokeLinejoin="round">
+      <Path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z" />
+    </Svg>
+  );
+}
+
+export function IconeComentario({ cor, tamanho = 16 }: { cor: string; tamanho?: number }) {
+  return <Linha cor={cor} tamanho={tamanho}><Path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></Linha>;
+}
+
+export function IconeCompartilhar({ cor, tamanho = 16 }: { cor: string; tamanho?: number }) {
+  return <Linha cor={cor} tamanho={tamanho}><Path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M16 6l-4-4-4 4M12 2v13" /></Linha>;
+}
+
+export function IconePausa({ cor, tamanho = 22 }: { cor: string; tamanho?: number }) {
+  return <Linha cor={cor} tamanho={tamanho}><Path d="M9 5v14M15 5v14" /></Linha>;
+}
+
+export function IconeParar({ cor, tamanho = 22 }: { cor: string; tamanho?: number }) {
+  return (
+    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24">
+      <Path d="M7 7h10v10H7z" fill={cor} />
+    </Svg>
+  );
+}
