@@ -7,7 +7,8 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.paceapp.pace"
     },
     "android": {
       "adaptiveIcon": {
@@ -16,14 +17,27 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.paceapp.pace"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-font"
+      "expo-font",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "O Pace usa sua localização para mostrar você no mapa e as rotas próximas."
+        }
+      ]
     ],
-    "backgroundColor": "#0d0d12"
+    "backgroundColor": "#0d0d12",
+    "extra": {
+      "eas": {
+        "projectId": "9aa05538-dd9a-4aba-a60d-654fc8571259"
+      }
+    },
+    "owner": "lordetome"
   }
 }
