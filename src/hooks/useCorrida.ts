@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as Location from "expo-location";
 import type { Coordenada } from "../data/rotas";
+import { direcaoEmGraus } from "../utils/camera";
 
 // Ignora leituras com precisão pior que isso e saltos menores que o ruído do GPS.
 const PRECISAO_MAXIMA_M = 30;
@@ -15,6 +16,8 @@ export default function useCorrida() {
   const [segundos, setSegundos] = useState(0);
   const [posicao, setPosicao] = useState<Coordenada | null>(null);
   const [trajeto, setTrajeto] = useState<Coordenada[]>([]);
+  // Direção em que o corredor está indo (graus, 0 = norte); null até o GPS conseguir calcular.
+  const [rumo, setRumo] = useState<number | null>(null);
 
   const pausadaRef = useRef(false);
   const ultimo = useRef<Coordenada | null>(null);
@@ -36,6 +39,9 @@ export default function useCorrida() {
           const anterior = ultimo.current;
           ultimo.current = atual;
           setPosicao(atual);
+          // heading vem como -1 ou null quando o aparelho está parado ou sem bússola; nesse caso mantém o último.
+          if (coords.heading != null && coords.heading >= 0) setRumo(coords.heading);
+          else if (anterior && distanciaEmMetros(anterior, atual) >= PASSO_MINIMO_M) setRumo(direcaoEmGraus(anterior, atual));
           if (!anterior) {
             setTrajeto((t) => [...t, atual]);
             return;
@@ -69,11 +75,11 @@ export default function useCorrida() {
     setPausada(pausadaRef.current);
   }, []);
 
-  return { permitido, pausada, metros, segundos, posicao, trajeto, alternarPausa };
+  return { permitido, pausada, metros, segundos, posicao, trajeto, rumo, alternarPausa };
 }
 
 // Fórmula de haversine: distância em metros entre dois pontos da superfície.
-function distanciaEmMetros(a: Coordenada, b: Coordenada) {
+export function distanciaEmMetros(a: Coordenada, b: Coordenada) {
   const R = 6371000;
   const rad = (g: number) => (g * Math.PI) / 180;
   const dLat = rad(b.latitude - a.latitude);

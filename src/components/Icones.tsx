@@ -115,3 +115,18 @@ export function IconeParar({ cor, tamanho = 22 }: { cor: string; tamanho?: numbe
     </Svg>
   );
 }
+
+// Seta de manobra: um "em frente" girado conforme a curva (direita 90°, esquerda -90°).
+const ANGULO_MANOBRA: Record<string, number> = {
+  TURN_SLIGHT_RIGHT: 45, TURN_RIGHT: 90, TURN_SHARP_RIGHT: 135, RAMP_RIGHT: 45, FORK_RIGHT: 45, ROUNDABOUT_RIGHT: 90,
+  TURN_SLIGHT_LEFT: -45, TURN_LEFT: -90, TURN_SHARP_LEFT: -135, RAMP_LEFT: -45, FORK_LEFT: -45, ROUNDABOUT_LEFT: -90,
+  UTURN_LEFT: 180, UTURN_RIGHT: 180,
+};
+
+export function IconeManobra({ manobra, cor, tamanho = 40 }: { manobra: string; cor: string; tamanho?: number }) {
+  return (
+    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none" stroke={cor} strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" style={{ transform: [{ rotate: `${ANGULO_MANOBRA[manobra] ?? 0}deg` }] }}>
+      <Path d="M12 20V5M5.5 11.5 12 5l6.5 6.5" />
+    </Svg>
+  );
+}

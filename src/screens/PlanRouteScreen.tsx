@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Keyboard, Pressable, ScrollView, TextInput, View } from "react-native";
 import usePosicao from "../hooks/usePosicao";
-import useRotasReais, { MINHA_LOCALIZACAO } from "../hooks/useRotasReais";
+import useRotasReais, { MINHA_LOCALIZACAO, type RotaReal } from "../hooks/useRotasReais";
 import useSugestoesDeEndereco from "../hooks/useSugestoesDeEndereco";
 import { cores, fontes } from "../theme";
 import Texto, { Rotulo } from "../components/Texto";
@@ -22,7 +22,7 @@ function formatarDuracao(segundos: number) {
 }
 
 interface Props {
-  onStartRun: () => void;
+  onStartRun: (rota: RotaReal) => void;
 }
 
 // As rotas aparecem assim que origem e destino são preenchidos (resultados ainda são dados fixos).
@@ -168,7 +168,7 @@ export default function PlanRouteScreen({ onStartRun }: Props) {
               Notas de segurança, trânsito, limpeza e conservação ainda não estão disponíveis.
             </Texto>
 
-            <Botao label={`Iniciar rota ${rotas.indexOf(selecionada) + 1}`} onPress={onStartRun} style={{ marginTop: 4 }} />
+            <Botao label={`Iniciar rota ${rotas.indexOf(selecionada) + 1}`} onPress={() => onStartRun(selecionada)} style={{ marginTop: 4 }} />
           </>
         )}
       </ScrollView>

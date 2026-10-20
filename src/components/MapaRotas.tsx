@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ROTAS, type Coordenada, type Rota } from "../data/rotas";
+import { CENTRO_INICIAL, ZOOM_INICIAL } from "./centroInicial";
 import MapaGoogleWebView, { type Camera, type Linha, type Margem, type Ponto } from "./MapaGoogleWebView";
 
 // Mapa de rotas (Google Maps JavaScript num WebView). Na web usa MapaRotas.web.tsx.
-const CENTRO_INICIAL = { latitude: -23.578, longitude: -46.675 };
-
 const MARGEM: Margem = { top: 60, right: 90, bottom: 40, left: 40 };
 const TODOS_OS_PONTOS = ROTAS.flatMap((r) => r.coords);
 
@@ -57,5 +56,5 @@ export default function MapaRotas({ selected, posicao, permitido }: Props) {
     return posicao ? [...alertas, { id: "voce", pos: posicao, cor: "#4c8dff", raio: 8, z: 3 }] : alertas;
   }, [posicao]);
 
-  return <MapaGoogleWebView linhas={linhas} pontos={pontos} camera={camera} centroInicial={CENTRO_INICIAL} zoomInicial={13} />;
+  return <MapaGoogleWebView linhas={linhas} pontos={pontos} camera={camera} centroInicial={CENTRO_INICIAL} zoomInicial={ZOOM_INICIAL} />;
 }

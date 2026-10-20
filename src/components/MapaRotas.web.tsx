@@ -3,6 +3,7 @@ import { useEffect, useRef } from "react";
 import { APIProvider, Map, Marker, Polyline, useMap } from "@vis.gl/react-google-maps";
 import { ROTAS, type Coordenada, type Rota } from "../data/rotas";
 import { cores } from "../theme";
+import { CENTRO_INICIAL, ZOOM_INICIAL } from "./centroInicial";
 import { ESTILO_ESCURO } from "./estiloMapa";
 
 // Na web o react-native-maps não funciona, então usamos o Google Maps JavaScript.
@@ -18,8 +19,8 @@ export default function MapaRotas({ selected, posicao }: Props) {
     <APIProvider apiKey={CHAVE}>
       <Map
         style={{ position: "absolute", inset: 0 }}
-        defaultCenter={{ lat: -23.578, lng: -46.675 }}
-        defaultZoom={13}
+        defaultCenter={latLng(CENTRO_INICIAL)}
+        defaultZoom={ZOOM_INICIAL}
         styles={ESTILO_ESCURO}
         backgroundColor={cores.bg}
         disableDefaultUI

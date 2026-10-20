@@ -27,6 +27,7 @@ import RouteScreen from "./src/screens/RouteScreen";
 import FeedScreen from "./src/screens/FeedScreen";
 import ProfileScreen from "./src/screens/ProfileScreen";
 import ActiveRunScreen from "./src/screens/ActiveRunScreen";
+import type { RotaReal } from "./src/hooks/useRotasReais";
 
 type Tab = "map" | "plan" | "route" | "feed" | "profile";
 
@@ -54,6 +55,7 @@ export default function App() {
   });
   const [showOnboarding, setShowOnboarding] = useState(true);
   const [activeRun, setActiveRun] = useState(false);
+  const [rotaPlanejada, setRotaPlanejada] = useState<RotaReal | null>(null);
   const [tab, setTab] = useState<Tab>("map");
 
   if (!fontsLoaded) return <View style={{ flex: 1, backgroundColor: cores.bg }} />;
@@ -66,11 +68,11 @@ export default function App() {
       <SafeAreaView style={{ flex: 1, backgroundColor: cores.bg }} edges={["top", "left", "right"]}>
         <View style={{ flex: 1 }}>
           {showOnboarding && <OnboardingScreen onFinish={() => { setShowOnboarding(false); setTab("map"); }} />}
-          {!showOnboarding && activeRun && <ActiveRunScreen onFinish={() => { setActiveRun(false); setTab("map"); }} />}
+          {!showOnboarding && activeRun && <ActiveRunScreen rota={rotaPlanejada} onFinish={() => { setActiveRun(false); setRotaPlanejada(null); setTab("map"); }} />}
           {comAbas && (
             <>
               {tab === "map" && <MapScreen />}
-              {tab === "plan" && <PlanRouteScreen onStartRun={() => setActiveRun(true)} />}
+              {tab === "plan" && <PlanRouteScreen onStartRun={(rota) => { setRotaPlanejada(rota); setActiveRun(true); }} />}
               {tab === "route" && <RouteScreen onStartRun={() => setActiveRun(true)} />}
               {tab === "feed" && <FeedScreen />}
               {tab === "profile" && <ProfileScreen />}

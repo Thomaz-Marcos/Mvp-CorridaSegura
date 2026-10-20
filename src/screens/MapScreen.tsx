@@ -1,7 +1,6 @@
-import { useState } from "react";
-import { Pressable, ScrollView, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { cores, INDICADORES } from "../theme";
-import Texto, { Rotulo } from "../components/Texto";
+import Texto from "../components/Texto";
 import Chip from "../components/Chip";
 import { IconeBusca } from "../components/Icones";
 import MapaRotas from "../components/MapaRotas";
@@ -12,7 +11,7 @@ import useNomeDoLugar from "../hooks/useNomeDoLugar";
 const PAINEL = { backgroundColor: "rgba(18,18,18,0.92)", borderWidth: 1, borderColor: cores.border, borderRadius: 10 };
 
 export default function MapScreen() {
-  const [selected, setSelected] = useState(ROTAS[0]);
+  const selected = ROTAS[0];
   const { posicao, permitido } = usePosicao();
   const lugar = useNomeDoLugar(posicao);
   const textoLugar = permitido === false ? "Localização desativada" : lugar ?? "Localizando…";
@@ -59,38 +58,6 @@ export default function MapScreen() {
           <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: cores.danger }} />
           <Texto tamanho={12}>2 alertas na área</Texto>
         </View>
-      </View>
-
-      {/* Cards de rotas */}
-      <View style={{ paddingHorizontal: 16, paddingTop: 14, paddingBottom: 12, gap: 10 }}>
-        <Rotulo style={{ paddingHorizontal: 4 }}>Rotas próximas</Rotulo>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingBottom: 4 }}>
-          {ROTAS.map((route) => {
-            const ativa = selected.id === route.id;
-            return (
-              <Pressable
-                key={route.id}
-                onPress={() => setSelected(route)}
-                style={{
-                  width: 156,
-                  borderRadius: 12,
-                  padding: 12,
-                  gap: 4,
-                  backgroundColor: ativa ? cores.surface2 : cores.surface,
-                  borderWidth: 1,
-                  borderColor: ativa ? cores.muted : cores.border,
-                }}
-              >
-                <Texto tamanho={14} peso="semibold" numberOfLines={1}>{route.name}</Texto>
-                <Texto tamanho={12} cor={cores.muted}>{route.distance} · {route.time}</Texto>
-                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 6 }}>
-                  <Texto tamanho={12} peso="medium" cor={route.color}>{route.label}</Texto>
-                  <Texto tamanho={16} peso="bold">{route.overall}</Texto>
-                </View>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
       </View>
     </View>
   );

@@ -8,6 +8,9 @@ import { ESTILO_ESCURO } from "./estiloMapa";
 // Google Maps JavaScript dentro de um WebView. O mapa nativo do Android (react-native-maps) depende de
 // uma chave embutida no build e fica preto no Expo Go; assim a mesma chave e API da web funcionam no celular.
 const CHAVE = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
+// Girar e inclinar o mapa exige o mapa vetorial, que só liga com um Map ID. DEMO_MAP_ID serve para testar;
+// para produção crie um Map ID vetorial no Google Cloud e ponha em EXPO_PUBLIC_GOOGLE_MAPS_MAP_ID.
+const MAP_ID = process.env.EXPO_PUBLIC_GOOGLE_MAPS_MAP_ID ?? "DEMO_MAP_ID";
 
 export type Linha = {
   id: string;
@@ -19,12 +22,13 @@ export type Linha = {
   z?: number;
 };
 
-export type Ponto = { id: string; pos: Coordenada; cor: string; raio?: number; z?: number };
+export type Ponto = { id: string; pos: Coordenada; cor: string; raio?: number; z?: number; icone?: { url: string; tamanho: number } };
 
 export type Margem = { top: number; right: number; bottom: number; left: number };
 
-// Cada mudança de `id` move a câmera uma vez: centraliza (centro + zoom) ou enquadra os pontos de `ajustar`.
-export type Camera = { id: string; centro?: Coordenada; zoom?: number; ajustar?: Coordenada[]; margem?: Margem };
+// Cada mudança de `id` move a câmera uma vez: centraliza (centro + zoom, com rumo e inclinação opcionais)
+// ou enquadra os pontos de `ajustar`.
+export type Camera = { id: string; centro?: Coordenada; zoom?: number; rumo?: number; inclinacao?: number; ajustar?: Coordenada[]; margem?: Margem };
 
 type Props = {
   linhas: Linha[];
@@ -32,6 +36,8 @@ type Props = {
   camera?: Camera;
   centroInicial: Coordenada;
   zoomInicial: number;
+  // Mapa vetorial: permite girar e inclinar. Desliga o `styles` (o tema escuro vem do colorScheme).
+  inclinavel?: boolean;
 };
 
 const latLng = ({ latitude, longitude }: Coordenada) => ({ lat: latitude, lng: longitude });
@@ -44,13 +50,15 @@ function converter({ linhas, pontos, camera }: Pick<Props, "linhas" | "pontos" |
       id: camera.id,
       centro: camera.centro && latLng(camera.centro),
       zoom: camera.zoom,
+      rumo: camera.rumo,
+      inclinacao: camera.inclinacao,
       ajustar: camera.ajustar?.map(latLng),
       margem: camera.margem,
     },
   });
 }
 
-function montarHtml(centro: Coordenada, zoom: number) {
+function montarHtml(centro: Coordenada, zoom: number, inclinavel: boolean) {
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -72,7 +80,9 @@ function montarHtml(centro: Coordenada, zoom: number) {
     mapa = new google.maps.Map(document.getElementById('mapa'), {
       center: ${JSON.stringify(latLng(centro))},
       zoom: ${zoom},
-      styles: ${JSON.stringify(ESTILO_ESCURO)},
+      ${inclinavel
+        ? `mapId: ${JSON.stringify(MAP_ID)}, renderingType: google.maps.RenderingType.VECTOR, colorScheme: google.maps.ColorScheme.DARK,`
+        : `styles: ${JSON.stringify(ESTILO_ESCURO)},`}
       backgroundColor: '${cores.bg}',
       disableDefaultUI: true,
       gestureHandling: 'greedy',
@@ -115,7 +125,11 @@ function montarHtml(centro: Coordenada, zoom: number) {
       var opcoes = {
         position: p.pos,
         zIndex: p.z || 1,
-        icon: {
+        icon: p.icone ? {
+          url: p.icone.url,
+          scaledSize: new google.maps.Size(p.icone.tamanho, p.icone.tamanho),
+          anchor: new google.maps.Point(p.icone.tamanho / 2, p.icone.tamanho / 2)
+        } : {
           path: google.maps.SymbolPath.CIRCLE,
           scale: p.raio || 8,
           fillColor: p.cor,
@@ -137,7 +151,10 @@ function montarHtml(centro: Coordenada, zoom: number) {
       if (cam.ajustar && cam.ajustar.length) {
         var limites = new google.maps.LatLngBounds();
         cam.ajustar.forEach(function (c) { limites.extend(c); });
+        if (mapa.getHeading() || mapa.getTilt()) mapa.moveCamera({ heading: 0, tilt: 0 });
         mapa.fitBounds(limites, cam.margem || 40);
+      } else if (cam.centro && cam.rumo != null) {
+        mapa.moveCamera({ center: cam.centro, zoom: cam.zoom, heading: cam.rumo, tilt: cam.inclinacao || 0 });
       } else if (cam.centro) {
         mapa.panTo(cam.centro);
         if (cam.zoom) mapa.setZoom(cam.zoom);
@@ -152,7 +169,7 @@ function montarHtml(centro: Coordenada, zoom: number) {
 </html>`;
 }
 
-export default function MapaGoogleWebView({ linhas, pontos, camera, centroInicial, zoomInicial }: Props) {
+export default function MapaGoogleWebView({ linhas, pontos, camera, centroInicial, zoomInicial, inclinavel = false }: Props) {
   const webview = useRef<WebView>(null);
   const pronto = useRef(false);
 
@@ -160,7 +177,7 @@ export default function MapaGoogleWebView({ linhas, pontos, camera, centroInicia
   const estadoAtual = useRef(estado);
 
   // O HTML é montado uma vez; depois o app só manda o estado novo, sem recarregar (não reseta o zoom).
-  const source = useMemo(() => ({ html: montarHtml(centroInicial, zoomInicial) }), []); // eslint-disable-line react-hooks/exhaustive-deps
+  const source = useMemo(() => ({ html: montarHtml(centroInicial, zoomInicial, inclinavel) }), []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const enviar = (json: string) => webview.current?.injectJavaScript(`window.aplicar(${json}); true;`);
 
