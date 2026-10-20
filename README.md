@@ -32,6 +32,8 @@ Pré-requisitos: [Node.js](https://nodejs.org) (LTS) e o app **Expo Go** no celu
 # instalar dependências
 npm install
 
+git shortlog -sn
+
 # iniciar o servidor de desenvolvimento
 npx expo start
 ```
