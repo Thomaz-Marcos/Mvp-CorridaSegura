@@ -1,39 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
-import { cores, INDICADORES } from "../theme";
+import { cores } from "../theme";
 import Texto from "../components/Texto";
-import Barra from "../components/Barra";
 import { IconeEngrenagem } from "../components/Icones";
-
-const BADGES = [
-  { label: "Guardião", desc: "10 alertas postados", unlocked: true },
-  { label: "Maratonista", desc: "100 km completados", unlocked: true },
-  { label: "Top 10", desc: "Entre os 10 da cidade", unlocked: true },
-  { label: "Explorador", desc: "20 rotas diferentes", unlocked: true },
-  { label: "Sequência 30", desc: "30 dias seguidos", unlocked: false },
-  { label: "Coruja", desc: "5 corridas noturnas", unlocked: false },
-];
-
-const HISTORY = [
-  { date: "Hoje, 07:15", route: "Parque Ibirapuera", dist: "5.2 km", time: "28:14", score: 84 },
-  { date: "Ontem, 18:30", route: "Av. Brigadeiro Faria Lima", dist: "3.1 km", time: "18:45", score: 61 },
-  { date: "Seg, 06:45", route: "Parque Ibirapuera", dist: "7.8 km", time: "42:30", score: 84 },
-  { date: "Dom, 08:00", route: "Parque Villa-Lobos", dist: "6.5 km", time: "35:20", score: 78 },
-];
-
-const WEEK = [
-  { day: "S", km: 0 },
-  { day: "T", km: 5.2 },
-  { day: "Q", km: 0 },
-  { day: "Q", km: 3.1 },
-  { day: "S", km: 7.8 },
-  { day: "S", km: 6.5 },
-  { day: "D", km: 5.2 },
-];
-
-const MEDIAS = [78, 64, 82, 71];
-
-const maxKm = Math.max(...WEEK.map((d) => d.km), 1);
+import { lerCorridas, type Corrida } from "../data/corridas";
+import { foiNoturna, melhorSequencia, rotuloDaData, sequenciaDeDias, ultimosSeteDias } from "../utils/estatisticas";
+import { formatarKm, formatarPace, formatarTempo } from "../utils/formatar";
 
 type Aba = "stats" | "history" | "badges";
 
@@ -41,6 +13,37 @@ const CARTAO = { borderRadius: 12, borderWidth: 1, borderColor: cores.border, ba
 
 export default function ProfileScreen() {
   const [tab, setTab] = useState<Aba>("stats");
+  const [corridas, setCorridas] = useState<Corrida[]>([]);
+
+  // Lê as corridas salvas no aparelho cada vez que a aba é aberta.
+  useEffect(() => {
+    let ativo = true;
+    lerCorridas().then((lista) => {
+      if (ativo) setCorridas(lista);
+    });
+    return () => {
+      ativo = false;
+    };
+  }, []);
+
+  const totalMetros = corridas.reduce((soma, c) => soma + c.metros, 0);
+  const totalSegundos = corridas.reduce((soma, c) => soma + c.segundos, 0);
+  const sequencia = sequenciaDeDias(corridas);
+  const semana = ultimosSeteDias(corridas);
+  const kmDaSemana = semana.reduce((soma, d) => soma + d.km, 0);
+  const maxKm = Math.max(...semana.map((d) => d.km), 1);
+  const historico = [...corridas].sort((a, b) => b.iniciadaEm - a.iniciadaEm);
+
+  const noturnas = corridas.filter(foiNoturna).length;
+  const melhor = melhorSequencia(corridas);
+  const conquistas = [
+    { label: "Primeira corrida", desc: "Complete 1 corrida", atual: corridas.length, meta: 1 },
+    { label: "10 km", desc: "10 km somados", atual: totalMetros / 1000, meta: 10 },
+    { label: "Maratonista", desc: "100 km completados", atual: totalMetros / 1000, meta: 100 },
+    { label: "Sequência 7", desc: "7 dias seguidos", atual: melhor, meta: 7 },
+    { label: "Sequência 30", desc: "30 dias seguidos", atual: melhor, meta: 30 },
+    { label: "Coruja", desc: "5 corridas noturnas", atual: noturnas, meta: 5 },
+  ].map((c) => ({ ...c, unlocked: c.atual >= c.meta }));
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: cores.bg }}>
@@ -53,7 +56,9 @@ export default function ProfileScreen() {
           <View style={{ flex: 1, gap: 2 }}>
             <Texto tamanho={18} peso="bold">Marina Costa</Texto>
             <Texto tamanho={13} cor={cores.muted}>@marinacorre · São Paulo, SP</Texto>
-            <Texto tamanho={12} cor={cores.muted}>Top 10 da cidade · 12 dias seguidos</Texto>
+            <Texto tamanho={12} cor={cores.muted}>
+              {sequencia > 0 ? `${sequencia} ${sequencia === 1 ? "dia seguido" : "dias seguidos"}` : "Nenhuma sequência ainda"}
+            </Texto>
           </View>
           <Pressable style={{ width: 40, height: 40, borderRadius: 10, borderWidth: 1, borderColor: cores.border, alignItems: "center", justifyContent: "center" }}>
             <IconeEngrenagem cor={cores.muted} />
@@ -62,13 +67,13 @@ export default function ProfileScreen() {
 
         <View style={[CARTAO, { flexDirection: "row" }]}>
           {[
-            { val: "247", label: "km" },
-            { val: "38", label: "corridas" },
-            { val: "14", label: "alertas" },
-            { val: "4.8", label: "avaliação" },
+            { val: formatarKm(totalMetros), label: "km" },
+            { val: String(corridas.length), label: "corridas" },
+            { val: formatarPace(totalSegundos, totalMetros / 1000), label: "pace médio" },
+            { val: formatarTempo(totalSegundos), label: "tempo total" },
           ].map((s, i) => (
             <View key={s.label} style={{ flex: 1, paddingVertical: 12, paddingHorizontal: 12, gap: 2, borderLeftWidth: i ? 1 : 0, borderColor: cores.border }}>
-              <Texto tamanho={17} peso="bold">{s.val}</Texto>
+              <Texto tamanho={17} peso="bold" numberOfLines={1} adjustsFontSizeToFit>{s.val}</Texto>
               <Texto tamanho={11} cor={cores.muted}>{s.label}</Texto>
             </View>
           ))}
@@ -97,67 +102,60 @@ export default function ProfileScreen() {
 
       <View style={{ paddingHorizontal: 16, paddingVertical: 16, gap: 12 }}>
         {tab === "stats" && (
-          <>
-            <View style={[CARTAO, { padding: 16 }]}>
-              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "baseline", marginBottom: 16 }}>
-                <Texto tamanho={14} peso="semibold">Esta semana</Texto>
-                <Texto tamanho={14} cor={cores.muted}>27.8 km</Texto>
-              </View>
-              <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 10, height: 84 }}>
-                {WEEK.map((d, i) => (
-                  <View key={i} style={{ flex: 1, alignItems: "center", gap: 6 }}>
-                    <View
-                      style={{
-                        width: "100%",
-                        height: Math.max((d.km / maxKm) * 64, 3),
-                        borderRadius: 3,
-                        backgroundColor: d.km === 0 ? cores.surface3 : i === 6 ? cores.accent : "#4a4a4a",
-                      }}
-                    />
-                    <Texto tamanho={11} cor={i === 6 ? cores.text : cores.muted}>{d.day}</Texto>
-                  </View>
-                ))}
-              </View>
+          <View style={[CARTAO, { padding: 16 }]}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "baseline", marginBottom: 16 }}>
+              <Texto tamanho={14} peso="semibold">Últimos 7 dias</Texto>
+              <Texto tamanho={14} cor={cores.muted}>{formatarKm(kmDaSemana * 1000)} km</Texto>
             </View>
-
-            <View style={[CARTAO, { padding: 16, gap: 12 }]}>
-              <Texto tamanho={14} peso="semibold">Média das suas rotas</Texto>
-              {INDICADORES.map((ind, i) => (
-                <View key={ind.chave} style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-                  <Texto tamanho={13} cor={cores.muted} style={{ width: 92 }}>{ind.label}</Texto>
-                  <Barra valor={MEDIAS[i]} cor={ind.cor} altura={4} fundo={cores.surface3} style={{ flex: 1 }} />
-                  <Texto tamanho={13} alinhar="right" style={{ width: 24 }}>{MEDIAS[i]}</Texto>
+            <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 10, height: 84 }}>
+              {semana.map((d, i) => (
+                <View key={i} style={{ flex: 1, alignItems: "center", gap: 6 }}>
+                  <View
+                    style={{
+                      width: "100%",
+                      height: Math.max((d.km / maxKm) * 64, 3),
+                      borderRadius: 3,
+                      backgroundColor: d.km === 0 ? cores.surface3 : i === 6 ? cores.accent : "#4a4a4a",
+                    }}
+                  />
+                  <Texto tamanho={11} cor={i === 6 ? cores.text : cores.muted}>{d.dia}</Texto>
                 </View>
               ))}
             </View>
-          </>
-        )}
-
-        {tab === "history" && (
-          <View style={CARTAO}>
-            {HISTORY.map((run, i) => (
-              <View
-                key={i}
-                style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 14, paddingVertical: 12, borderTopWidth: i ? 1 : 0, borderColor: cores.border }}
-              >
-                <View style={{ flex: 1, gap: 2 }}>
-                  <Texto tamanho={14} peso="medium" numberOfLines={1}>{run.route}</Texto>
-                  <Texto tamanho={12} cor={cores.muted}>{run.date} · {run.dist} · {run.time}</Texto>
-                </View>
-                <Texto tamanho={16} peso="bold">{run.score}</Texto>
-              </View>
-            ))}
           </View>
         )}
 
+        {tab === "history" &&
+          (historico.length === 0 ? (
+            <Texto tamanho={13} cor={cores.muted} style={{ paddingHorizontal: 4 }}>
+              Nenhuma corrida salva ainda. Inicie uma corrida e toque em Encerrar para ela aparecer aqui.
+            </Texto>
+          ) : (
+            <View style={CARTAO}>
+              {historico.map((run, i) => (
+                <View
+                  key={run.id}
+                  style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 14, paddingVertical: 12, borderTopWidth: i ? 1 : 0, borderColor: cores.border }}
+                >
+                  <View style={{ flex: 1, gap: 2 }}>
+                    <Texto tamanho={14} peso="medium" numberOfLines={1}>{rotuloDaData(run.iniciadaEm)}</Texto>
+                    <Texto tamanho={12} cor={cores.muted}>{formatarKm(run.metros)} km · {formatarTempo(run.segundos)}</Texto>
+                  </View>
+                  <Texto tamanho={14} peso="semibold">{formatarPace(run.segundos, run.metros / 1000)}</Texto>
+                  <Texto tamanho={11} cor={cores.muted}>/km</Texto>
+                </View>
+              ))}
+            </View>
+          ))}
+
         {tab === "badges" && (
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
-            {BADGES.map((badge) => (
+            {conquistas.map((badge) => (
               <View key={badge.label} style={[CARTAO, { width: "47%", flexGrow: 1, padding: 14, gap: 4, opacity: badge.unlocked ? 1 : 0.45 }]}>
                 <Texto tamanho={14} peso="semibold">{badge.label}</Texto>
                 <Texto tamanho={12} cor={cores.muted}>{badge.desc}</Texto>
                 <Texto tamanho={11} cor={badge.unlocked ? cores.accent : cores.muted} style={{ marginTop: 6 }}>
-                  {badge.unlocked ? "Conquistada" : "Bloqueada"}
+                  {badge.unlocked ? "Conquistada" : `${Math.floor(badge.atual)} de ${badge.meta}`}
                 </Texto>
               </View>
             ))}
