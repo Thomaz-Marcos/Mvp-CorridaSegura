@@ -120,3 +120,4 @@ npx tsc --noEmit    # checagem de tipos
 - [Thomaz Marcos](https://github.com/Thomaz-Marcos)
 - [Bruna Otas](https://github.com/brunaOtas)
 - [Santangelo Uchoa](https://github.com/SantangeloUchoa)
+- [Marcos](https://github.com/MarcosV26)
