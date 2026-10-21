@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Pressable, View } from "react-native";
+import type { Session } from "@supabase/supabase-js";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -27,7 +28,10 @@ import RouteScreen from "./src/screens/RouteScreen";
 import FeedScreen from "./src/screens/FeedScreen";
 import ProfileScreen from "./src/screens/ProfileScreen";
 import ActiveRunScreen from "./src/screens/ActiveRunScreen";
+import useSessao from "./src/hooks/useSessao";
 import type { RotaReal } from "./src/hooks/useRotasReais";
+
+const nomeDe = (s: Session) => (s.user.user_metadata?.nome as string | undefined) ?? "Corredor";
 
 type Tab = "map" | "plan" | "route" | "feed" | "profile";
 
@@ -53,24 +57,25 @@ export default function App() {
     JetBrainsMono_600SemiBold,
     JetBrainsMono_700Bold,
   });
-  const [showOnboarding, setShowOnboarding] = useState(true);
+  const sessao = useSessao();
   const [activeRun, setActiveRun] = useState(false);
   const [rotaPlanejada, setRotaPlanejada] = useState<RotaReal | null>(null);
   const [rotaEscolhida, setRotaEscolhida] = useState<RotaReal | null>(null);
   const [pedido, setPedido] = useState<{ origem: string; destino: string } | null>(null);
   const [tab, setTab] = useState<Tab>("map");
 
-  if (!fontsLoaded) return <View style={{ flex: 1, backgroundColor: cores.bg }} />;
+  if (!fontsLoaded || sessao === undefined) return <View style={{ flex: 1, backgroundColor: cores.bg }} />;
 
-  const comAbas = !showOnboarding && !activeRun;
+  const logado = sessao !== null;
+  const comAbas = logado && !activeRun;
 
   return (
     <SafeAreaProvider>
       <StatusBar style="light" />
       <SafeAreaView style={{ flex: 1, backgroundColor: cores.bg }} edges={["top", "left", "right"]}>
         <View style={{ flex: 1 }}>
-          {showOnboarding && <OnboardingScreen onFinish={() => { setShowOnboarding(false); setTab("map"); }} />}
-          {!showOnboarding && activeRun && <ActiveRunScreen rota={rotaPlanejada} onFinish={() => { setActiveRun(false); setRotaPlanejada(null); setTab("map"); }} />}
+          {!logado && <OnboardingScreen />}
+          {logado && activeRun && <ActiveRunScreen rota={rotaPlanejada} onFinish={() => { setActiveRun(false); setRotaPlanejada(null); setTab("map"); }} />}
           {comAbas && (
             <>
               {/* O mapa fica montado e só é escondido: trocar de aba não recarrega o Google Maps (o WebView demora segundos para abrir). */}
@@ -91,8 +96,8 @@ export default function App() {
                   onPlanejar={() => setTab("plan")}
                 />
               )}
-              {tab === "feed" && <FeedScreen />}
-              {tab === "profile" && <ProfileScreen />}
+              {tab === "feed" && <FeedScreen usuarioId={sessao.user.id} />}
+              {tab === "profile" && <ProfileScreen nome={nomeDe(sessao)} email={sessao.user.email ?? ""} />}
             </>
           )}
         </View>

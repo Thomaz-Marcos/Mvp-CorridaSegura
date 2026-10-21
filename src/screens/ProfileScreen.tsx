@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { Pressable, ScrollView, View } from "react-native";
+import { Alert, Pressable, ScrollView, View } from "react-native";
 import { cores } from "../theme";
+import { supabase } from "../lib/supabase";
 import Texto from "../components/Texto";
 import { IconeEngrenagem } from "../components/Icones";
 import { lerCorridas, type Corrida } from "../data/corridas";
@@ -11,7 +12,12 @@ type Aba = "stats" | "history" | "badges";
 
 const CARTAO = { borderRadius: 12, borderWidth: 1, borderColor: cores.border, backgroundColor: cores.surface };
 
-export default function ProfileScreen() {
+interface Props {
+  nome: string;
+  email: string;
+}
+
+export default function ProfileScreen({ nome, email }: Props) {
   const [tab, setTab] = useState<Aba>("stats");
   const [corridas, setCorridas] = useState<Corrida[]>([]);
 
@@ -25,6 +31,12 @@ export default function ProfileScreen() {
       ativo = false;
     };
   }, []);
+
+  const confirmarSaida = () =>
+    Alert.alert("Sair da conta?", undefined, [
+      { text: "Cancelar", style: "cancel" },
+      { text: "Sair", style: "destructive", onPress: () => supabase.auth.signOut() },
+    ]);
 
   const totalMetros = corridas.reduce((soma, c) => soma + c.metros, 0);
   const totalSegundos = corridas.reduce((soma, c) => soma + c.segundos, 0);
@@ -51,16 +63,18 @@ export default function ProfileScreen() {
       <View style={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 16, gap: 18 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
           <View style={{ width: 56, height: 56, borderRadius: 28, alignItems: "center", justifyContent: "center", backgroundColor: cores.surface3 }}>
-            <Texto tamanho={18} peso="semibold">MC</Texto>
+            <Texto tamanho={18} peso="semibold">{nome.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0].toUpperCase()).join("") || "?"}</Texto>
           </View>
           <View style={{ flex: 1, gap: 2 }}>
-            <Texto tamanho={18} peso="bold">Marina Costa</Texto>
-            <Texto tamanho={13} cor={cores.muted}>@marinacorre · São Paulo, SP</Texto>
+            <Texto tamanho={18} peso="bold">{nome}</Texto>
+            <Texto tamanho={13} cor={cores.muted} numberOfLines={1}>{email}</Texto>
             <Texto tamanho={12} cor={cores.muted}>
               {sequencia > 0 ? `${sequencia} ${sequencia === 1 ? "dia seguido" : "dias seguidos"}` : "Nenhuma sequência ainda"}
             </Texto>
           </View>
-          <Pressable style={{ width: 40, height: 40, borderRadius: 10, borderWidth: 1, borderColor: cores.border, alignItems: "center", justifyContent: "center" }}>
+          <Pressable
+            onPress={confirmarSaida}
+            style={{ width: 40, height: 40, borderRadius: 10, borderWidth: 1, borderColor: cores.border, alignItems: "center", justifyContent: "center" }}>
             <IconeEngrenagem cor={cores.muted} />
           </Pressable>
         </View>
