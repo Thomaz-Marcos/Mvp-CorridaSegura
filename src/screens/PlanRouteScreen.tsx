@@ -1,44 +1,46 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Keyboard, Pressable, ScrollView, TextInput, View } from "react-native";
 import usePosicao from "../hooks/usePosicao";
 import useRotasReais, { MINHA_LOCALIZACAO, type RotaReal } from "../hooks/useRotasReais";
 import useSugestoesDeEndereco from "../hooks/useSugestoesDeEndereco";
+import useFavoritas from "../hooks/useFavoritas";
+import { registrarRotaFeita } from "../data/historicoRotas";
 import { cores, fontes } from "../theme";
+import { formatarDistancia, formatarDuracao } from "../utils/formatar";
 import Texto, { Rotulo } from "../components/Texto";
 import Chip from "../components/Chip";
 import Botao from "../components/Botao";
 import { IconeTrocar } from "../components/Icones";
 
-// Lugares de atalho (só os nomes; distância e rota vêm do Google ao escolher).
-const FAVORITAS = ["Parque Ibirapuera, São Paulo", "Avenida Paulista, São Paulo", "Parque Villa-Lobos, São Paulo"];
-
-function formatarDistancia(metros: number) {
-  return metros < 1000 ? `${Math.round(metros)} m` : `${(metros / 1000).toFixed(1).replace(".", ",")} km`;
-}
-
-function formatarDuracao(segundos: number) {
-  const min = Math.max(1, Math.round(segundos / 60));
-  return min < 60 ? `${min} min` : `${Math.floor(min / 60)} h ${min % 60 ? `${min % 60} min` : ""}`.trim();
-}
-
 interface Props {
   onStartRun: (rota: RotaReal) => void;
+  onVerNoMapa: (rota: RotaReal) => void;
+  // Origem e destino vindos do histórico de rotas; preenchem os campos ao abrir a tela.
+  inicial: { origem: string; destino: string } | null;
+  onUsouInicial: () => void;
 }
 
-// As rotas aparecem assim que origem e destino são preenchidos (resultados ainda são dados fixos).
-export default function PlanRouteScreen({ onStartRun }: Props) {
-  const [origem, setOrigem] = useState("");
-  const [destino, setDestino] = useState("");
+// As rotas aparecem assim que origem e destino são preenchidos.
+export default function PlanRouteScreen({ onStartRun, onVerNoMapa, inicial, onUsouInicial }: Props) {
+  const [origem, setOrigem] = useState(inicial?.origem ?? "");
+  const [destino, setDestino] = useState(inicial?.destino ?? "");
   const [escolhida, setEscolhida] = useState(0);
   const [campoAtivo, setCampoAtivo] = useState<"origem" | "destino" | null>(null);
   const { posicao } = usePosicao();
+  const { favoritas, ehFavorita, alternar } = useFavoritas();
+
+  useEffect(() => {
+    if (inicial) onUsouInicial();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const { sugestoes, erro } = useSugestoesDeEndereco(
     campoAtivo === "origem" ? origem : destino,
     campoAtivo !== null,
     posicao,
   );
   const searched = origem.trim() !== "" && destino.trim() !== "" && campoAtivo === null;
-  const { rotas, erro: erroRotas, carregando } = useRotasReais(origem.trim(), destino.trim(), searched, posicao);
+  const { rotas: rotasGoogle, erro: erroRotas, carregando } = useRotasReais(origem.trim(), destino.trim(), searched, posicao);
+  const [ordem, setOrdem] = useState<"sugerida" | "rapida" | "curta">("sugerida");
+  const rotas = ordem === "rapida" ? [...rotasGoogle].sort((a, b) => a.segundos - b.segundos) : ordem === "curta" ? [...rotasGoogle].sort((a, b) => a.metros - b.metros) : rotasGoogle;
   const selecionada = rotas.find((r) => r.id === escolhida) ?? rotas[0];
   const maisRapida = rotas.length > 1 ? rotas.reduce((a, b) => (b.segundos < a.segundos ? b : a)).id : null;
   const maisCurta = rotas.length > 1 ? rotas.reduce((a, b) => (b.metros < a.metros ? b : a)).id : null;
@@ -55,11 +57,18 @@ export default function PlanRouteScreen({ onStartRun }: Props) {
     setDestino(origem);
   };
 
-  // Tocar numa favorita define o destino; a origem fica por conta de quem digita.
-  const escolherFavorita = (nome: string) => {
-    setDestino(nome);
-    if (!origem.trim()) setOrigem(MINHA_LOCALIZACAO);
+  const escolherFavorita = (f: { origem: string; destino: string }) => {
+    setOrigem(f.origem);
+    setDestino(f.destino);
   };
+
+  // Guarda a rota no histórico (aba Rota) e começa a corrida.
+  const iniciar = () => {
+    registrarRotaFeita({ origem: origem.trim(), destino: destino.trim(), metros: selecionada.metros, segundos: selecionada.segundos });
+    onStartRun(selecionada);
+  };
+
+  const favoritada = ehFavorita(origem.trim(), destino.trim());
 
   return (
     <View style={{ flex: 1, backgroundColor: cores.bg }}>
@@ -81,9 +90,9 @@ export default function PlanRouteScreen({ onStartRun }: Props) {
         </View>
 
         <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
-          <Chip label="Segura" ativo />
-          <Chip label="Rápida" />
-          <Chip label="Parques" />
+          {([["sugerida", "Sugerida"], ["rapida", "Mais rápida"], ["curta", "Mais curta"]] as const).map(([id, label]) => (
+            <Chip key={id} label={label} ativo={ordem === id} onPress={() => { setOrdem(id); setEscolhida(-1); }} />
+          ))}
         </View>
       </View>
 
@@ -115,17 +124,27 @@ export default function PlanRouteScreen({ onStartRun }: Props) {
         ) : !searched ? (
           <>
             <Rotulo style={{ paddingHorizontal: 4 }}>Favoritas</Rotulo>
-            <View style={{ borderRadius: 12, borderWidth: 1, borderColor: cores.border, backgroundColor: cores.surface }}>
-              {FAVORITAS.map((r, i) => (
-                <Pressable
-                  key={r}
-                  onPress={() => escolherFavorita(r)}
-                  style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 14, paddingVertical: 12, borderTopWidth: i ? 1 : 0, borderColor: cores.border }}
-                >
-                  <Texto tamanho={14} peso="medium">{r}</Texto>
-                </Pressable>
-              ))}
-            </View>
+            {favoritas.length === 0 ? (
+              <Texto tamanho={13} cor={cores.muted} style={{ paddingHorizontal: 4 }}>
+                Nenhuma rota favorita ainda. Calcule uma rota e toque em Favoritar para ela aparecer aqui.
+              </Texto>
+            ) : (
+              <View style={{ borderRadius: 12, borderWidth: 1, borderColor: cores.border, backgroundColor: cores.surface }}>
+                {favoritas.map((f, i) => (
+                  <View key={f.id} style={{ flexDirection: "row", alignItems: "center", borderTopWidth: i ? 1 : 0, borderColor: cores.border }}>
+                    <Pressable onPress={() => escolherFavorita(f)} style={{ flex: 1, gap: 2, paddingHorizontal: 14, paddingVertical: 12 }}>
+                      <Texto tamanho={14} peso="medium" numberOfLines={1}>{f.destino}</Texto>
+                      <Texto tamanho={12} cor={cores.muted} numberOfLines={1}>
+                        De {f.origem}{f.metros != null && f.segundos != null ? ` · ${formatarDistancia(f.metros)} · ${formatarDuracao(f.segundos)}` : ""}
+                      </Texto>
+                    </Pressable>
+                    <Pressable onPress={() => alternar(f.origem, f.destino)} hitSlop={8} style={{ paddingHorizontal: 14, paddingVertical: 12 }}>
+                      <Texto tamanho={12} cor={cores.muted}>Remover</Texto>
+                    </Pressable>
+                  </View>
+                ))}
+              </View>
+            )}
           </>
         ) : carregando ? (
           <Texto tamanho={13} cor={cores.muted} style={{ paddingHorizontal: 4 }}>Calculando rotas…</Texto>
@@ -168,7 +187,13 @@ export default function PlanRouteScreen({ onStartRun }: Props) {
               Notas de segurança, trânsito, limpeza e conservação ainda não estão disponíveis.
             </Texto>
 
-            <Botao label={`Iniciar rota ${rotas.indexOf(selecionada) + 1}`} onPress={() => onStartRun(selecionada)} style={{ marginTop: 4 }} />
+            <Botao label={`Iniciar rota ${rotas.indexOf(selecionada) + 1}`} onPress={iniciar} style={{ marginTop: 4 }} />
+            <Botao label="Ver no mapa" secundario onPress={() => onVerNoMapa(selecionada)} />
+            <Botao
+              label={favoritada ? "Remover dos favoritos" : "Favoritar"}
+              secundario
+              onPress={() => alternar(origem.trim(), destino.trim(), { metros: selecionada.metros, segundos: selecionada.segundos })}
+            />
           </>
         )}
       </ScrollView>

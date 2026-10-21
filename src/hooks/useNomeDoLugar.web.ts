@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { Coordenada } from "../data/rotas";
+import type { Coordenada } from "../data/coordenada";
 import { formatarLugar } from "../utils/lugar";
 
 // Na web o expo-location não converte posição em endereço, então usamos a Geocoding API do Google.

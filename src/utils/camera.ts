@@ -1,4 +1,4 @@
-import type { Coordenada } from "../data/rotas";
+import type { Coordenada } from "../data/coordenada";
 
 // Câmera em primeira pessoa: bem inclinada (67,5° é o máximo do Google Maps) e de perto.
 export const INCLINACAO_PRIMEIRA_PESSOA = 67;

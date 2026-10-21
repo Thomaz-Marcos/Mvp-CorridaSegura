@@ -1,7 +1,7 @@
 /// <reference types="google.maps" />
 import { useEffect, useMemo } from "react";
 import { APIProvider, Map, Marker, Polyline, useMap } from "@vis.gl/react-google-maps";
-import type { Coordenada } from "../data/rotas";
+import type { Coordenada } from "../data/coordenada";
 import { cores } from "../theme";
 import { cameraDaRota, INCLINACAO_PRIMEIRA_PESSOA, pontoAdiante, ZOOM_PRIMEIRA_PESSOA } from "../utils/camera";
 import { CENTRO_INICIAL, ZOOM_INICIAL } from "./centroInicial";

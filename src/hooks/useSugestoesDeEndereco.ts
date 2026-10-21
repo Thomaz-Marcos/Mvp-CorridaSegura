@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { Coordenada } from "../data/rotas";
+import type { Coordenada } from "../data/coordenada";
 
 // Sugestões de endereço enquanto a pessoa digita, pela Places API (New) do Google.
 // A chave precisa ter a "Places API (New)" ativada no Google Cloud.

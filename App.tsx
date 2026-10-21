@@ -34,7 +34,7 @@ type Tab = "map" | "plan" | "route" | "feed" | "profile";
 const TABS: { id: Tab; label: string }[] = [
   { id: "map", label: "Mapa" },
   { id: "plan", label: "Planejar" },
-  { id: "route", label: "Rota" },
+  { id: "route", label: "Rotas" },
   { id: "feed", label: "Feed" },
   { id: "profile", label: "Perfil" },
 ];
@@ -56,6 +56,8 @@ export default function App() {
   const [showOnboarding, setShowOnboarding] = useState(true);
   const [activeRun, setActiveRun] = useState(false);
   const [rotaPlanejada, setRotaPlanejada] = useState<RotaReal | null>(null);
+  const [rotaEscolhida, setRotaEscolhida] = useState<RotaReal | null>(null);
+  const [pedido, setPedido] = useState<{ origem: string; destino: string } | null>(null);
   const [tab, setTab] = useState<Tab>("map");
 
   if (!fontsLoaded) return <View style={{ flex: 1, backgroundColor: cores.bg }} />;
@@ -71,9 +73,21 @@ export default function App() {
           {!showOnboarding && activeRun && <ActiveRunScreen rota={rotaPlanejada} onFinish={() => { setActiveRun(false); setRotaPlanejada(null); setTab("map"); }} />}
           {comAbas && (
             <>
-              {tab === "map" && <MapScreen />}
-              {tab === "plan" && <PlanRouteScreen onStartRun={(rota) => { setRotaPlanejada(rota); setActiveRun(true); }} />}
-              {tab === "route" && <RouteScreen onStartRun={() => setActiveRun(true)} />}
+              {tab === "map" && <MapScreen rota={rotaEscolhida} onPlanejar={() => setTab("plan")} />}
+              {tab === "plan" && (
+                <PlanRouteScreen
+                  onStartRun={(rota) => { setRotaPlanejada(rota); setActiveRun(true); }}
+                  onVerNoMapa={(rota) => { setRotaEscolhida(rota); setTab("map"); }}
+                  inicial={pedido}
+                  onUsouInicial={() => setPedido(null)}
+                />
+              )}
+              {tab === "route" && (
+                <RouteScreen
+                  onRefazer={(origem, destino) => { setPedido({ origem, destino }); setTab("plan"); }}
+                  onPlanejar={() => setTab("plan")}
+                />
+              )}
               {tab === "feed" && <FeedScreen />}
               {tab === "profile" && <ProfileScreen />}
             </>

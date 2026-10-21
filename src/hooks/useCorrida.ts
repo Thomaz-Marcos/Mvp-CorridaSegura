@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as Location from "expo-location";
-import type { Coordenada } from "../data/rotas";
+import type { Coordenada } from "../data/coordenada";
 import { direcaoEmGraus } from "../utils/camera";
 
 // Ignora leituras com precisão pior que isso e saltos menores que o ruído do GPS.

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { StyleSheet } from "react-native";
 import { WebView, type WebViewMessageEvent } from "react-native-webview";
-import type { Coordenada } from "../data/rotas";
+import type { Coordenada } from "../data/coordenada";
 import { cores } from "../theme";
 import { ESTILO_ESCURO } from "./estiloMapa";
 

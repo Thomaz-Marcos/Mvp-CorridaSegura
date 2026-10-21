@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { Coordenada } from "../data/rotas";
+import type { Coordenada } from "../data/coordenada";
 
 // Rotas a pé entre dois pontos, pela Routes API do Google (inclui alternativas).
 // A chave precisa ter a "Routes API" ativada no Google Cloud.

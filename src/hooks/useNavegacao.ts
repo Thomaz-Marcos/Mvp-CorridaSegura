@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Coordenada } from "../data/rotas";
+import type { Coordenada } from "../data/coordenada";
 import type { Passo, RotaReal } from "./useRotasReais";
 import { distanciaEmMetros } from "./useCorrida";
 

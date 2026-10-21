@@ -8,7 +8,7 @@ interface Props {
   onPress?: () => void;
 }
 
-// Filtro ("Todas", "Seguras"...): ativo fica preenchido, os outros só com contorno. Só visual.
+// Filtro ("Todas", "Seguras"...): ativo fica preenchido, os outros só com contorno.
 export default function Chip({ label, ativo, onPress }: Props) {
   return (
     <Pressable

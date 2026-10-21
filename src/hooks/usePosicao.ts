@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Platform } from "react-native";
 import * as Location from "expo-location";
-import type { Coordenada } from "../data/rotas";
+import type { Coordenada } from "../data/coordenada";
 
 // Pede a permissão uma vez e devolve a posição atual do aparelho.
 // permitido: null enquanto espera a resposta, depois true/false.

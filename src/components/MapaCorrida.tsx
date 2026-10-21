@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { Coordenada } from "../data/rotas";
+import type { Coordenada } from "../data/coordenada";
 import { cores } from "../theme";
 import { ICONE_CORREDOR, TAMANHO_ICONE_CORREDOR } from "./iconeCorredor";
 import { cameraDaRota, INCLINACAO_PRIMEIRA_PESSOA, pontoAdiante, ZOOM_PRIMEIRA_PESSOA } from "../utils/camera";

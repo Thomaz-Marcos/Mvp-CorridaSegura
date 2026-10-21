@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import * as Location from "expo-location";
-import type { Coordenada } from "../data/rotas";
+import type { Coordenada } from "../data/coordenada";
 import { formatarLugar } from "../utils/lugar";
 
 // Converte a posição em "Cidade, UF" com o geocodificador do próprio celular.
