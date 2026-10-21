@@ -204,6 +204,8 @@ export default function MapaGoogleWebView({ linhas, pontos, camera, centroInicia
       overScrollMode="never"
       nestedScrollEnabled
       setSupportMultipleWindows={false}
+      androidLayerType="hardware"
+      domStorageEnabled
     />
   );
 }

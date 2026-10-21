@@ -73,7 +73,10 @@ export default function App() {
           {!showOnboarding && activeRun && <ActiveRunScreen rota={rotaPlanejada} onFinish={() => { setActiveRun(false); setRotaPlanejada(null); setTab("map"); }} />}
           {comAbas && (
             <>
-              {tab === "map" && <MapScreen rota={rotaEscolhida} onPlanejar={() => setTab("plan")} />}
+              {/* O mapa fica montado e só é escondido: trocar de aba não recarrega o Google Maps (o WebView demora segundos para abrir). */}
+              <View style={{ flex: 1, display: tab === "map" ? "flex" : "none" }}>
+                <MapScreen rota={rotaEscolhida} onPlanejar={() => setTab("plan")} />
+              </View>
               {tab === "plan" && (
                 <PlanRouteScreen
                   onStartRun={(rota) => { setRotaPlanejada(rota); setActiveRun(true); }}
