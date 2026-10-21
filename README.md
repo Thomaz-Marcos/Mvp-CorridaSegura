@@ -71,3 +71,4 @@ npm run web       # navegador
 
 - [Thomaz Marcos](https://github.com/Thomaz-Marcos)
 - [Bruna Otas](https://github.com/brunaOtas)
+- [Santangelo Uchoa](https://github.com/SantangeloUchoa)
