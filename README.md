@@ -121,6 +121,7 @@ npx tsc --noEmit    # checagem de tipos
 - [ ] Botão de emergência durante a corrida
 
 ## Equipe
+git shortlog -sn
 
 - [Thomaz Marcos](https://github.com/Thomaz-Marcos)
 - [Bruna Otas](https://github.com/brunaOtas)
