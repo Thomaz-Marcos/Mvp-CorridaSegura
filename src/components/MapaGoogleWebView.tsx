@@ -170,7 +170,7 @@ function montarHtml(centro: Coordenada, zoom: number, inclinavel: boolean) {
 }
 
 export default function MapaGoogleWebView({ linhas, pontos, camera, centroInicial, zoomInicial, inclinavel = false }: Props) {
-  const webview = useRef<WebView>(null);
+  const webview = useRef<WebView<object>>(null);
   const pronto = useRef(false);
 
   const estado = useMemo(() => converter({ linhas, pontos, camera }), [linhas, pontos, camera]);
