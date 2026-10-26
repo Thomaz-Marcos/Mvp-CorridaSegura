@@ -26,7 +26,10 @@ create table public.alertas (
   tipo text not null check (tipo in ('danger', 'warn', 'ok')),
   texto text not null check (char_length(trim(texto)) between 1 and 500),
   local text,
-  criado_em timestamptz not null default now()
+  latitude double precision check (latitude between -90 and 90),
+  longitude double precision check (longitude between -180 and 180),
+  criado_em timestamptz not null default now(),
+  check ((latitude is null) = (longitude is null))
 );
 create index alertas_criado_em_idx on public.alertas (criado_em desc);
 
@@ -52,7 +55,7 @@ create policy "descurtir a propria curtida" on public.curtidas for delete to aut
 -- Feed pronto: alerta + nome do autor + total de curtidas + se EU curti.
 create view public.feed with (security_invoker = true) as
 select
-  a.id, a.tipo, a.texto, a.local, a.criado_em, a.autor_id,
+  a.id, a.tipo, a.texto, a.local, a.latitude, a.longitude, a.criado_em, a.autor_id,
   p.nome as autor_nome,
   (select count(*) from public.curtidas c where c.alerta_id = a.id)::int as curtidas,
   exists (select 1 from public.curtidas c where c.alerta_id = a.id and c.usuario_id = auth.uid()) as curtido

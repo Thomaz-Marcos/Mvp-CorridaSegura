@@ -73,7 +73,7 @@ export default function FeedScreen({ usuarioId }: Props) {
     if (texto.trim() === "" || publicando) return;
     setPublicando(true);
     try {
-      await publicarAlerta({ tipo, texto, local: lugar });
+      await publicarAlerta({ tipo, texto, local: lugar, posicao });
       setTexto("");
       setShowCompose(false);
       aplicar(await buscar());
@@ -174,7 +174,7 @@ export default function FeedScreen({ usuarioId }: Props) {
               borderColor: cores.border,
             }}
           />
-          <Texto tamanho={12} cor={cores.muted}>{lugar ? `Local: ${lugar}` : "Sem localização: o alerta vai sem local."}</Texto>
+          <Texto tamanho={12} cor={cores.muted}>{posicao ? `Local: ${lugar ?? "posição atual"}` : "Sem localização: o alerta não aparece no mapa nem conta na nota das rotas."}</Texto>
           <Botao label={publicando ? "Publicando…" : "Publicar"} onPress={publicar} />
         </View>
       </View>

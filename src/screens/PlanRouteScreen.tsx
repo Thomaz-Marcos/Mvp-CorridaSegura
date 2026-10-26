@@ -1,14 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Keyboard, Pressable, ScrollView, TextInput, View } from "react-native";
 import usePosicao from "../hooks/usePosicao";
 import useRotasReais, { MINHA_LOCALIZACAO, type RotaReal } from "../hooks/useRotasReais";
 import useSugestoesDeEndereco from "../hooks/useSugestoesDeEndereco";
 import useFavoritas from "../hooks/useFavoritas";
+import useAlertasLocalizados from "../hooks/useAlertasLocalizados";
 import { registrarRotaFeita } from "../data/historicoRotas";
 import { cores, fontes } from "../theme";
 import { formatarDistancia, formatarDuracao } from "../utils/formatar";
+import { corDaNota, notaDaRota, resumoDosAlertas, rotuloDaNota } from "../utils/seguranca";
 import Texto, { Rotulo } from "../components/Texto";
 import Chip from "../components/Chip";
+import Barra from "../components/Barra";
 import Botao from "../components/Botao";
 import { IconeTrocar } from "../components/Icones";
 
@@ -39,11 +42,20 @@ export default function PlanRouteScreen({ onStartRun, onVerNoMapa, inicial, onUs
   );
   const searched = origem.trim() !== "" && destino.trim() !== "" && campoAtivo === null;
   const { rotas: rotasGoogle, erro: erroRotas, carregando } = useRotasReais(origem.trim(), destino.trim(), searched, posicao);
-  const [ordem, setOrdem] = useState<"sugerida" | "rapida" | "curta">("sugerida");
-  const rotas = ordem === "rapida" ? [...rotasGoogle].sort((a, b) => a.segundos - b.segundos) : ordem === "curta" ? [...rotasGoogle].sort((a, b) => a.metros - b.metros) : rotasGoogle;
+  const alertas = useAlertasLocalizados(carregando);
+  const notas = useMemo(() => new Map(rotasGoogle.map((r) => [r.id, notaDaRota(r.coords, alertas)])), [rotasGoogle, alertas]);
+  const [ordem, setOrdem] = useState<"sugerida" | "segura" | "rapida" | "curta">("sugerida");
+  const nota = (r: RotaReal) => notas.get(r.id)?.nota ?? 100;
+  const rotas =
+    ordem === "segura" ? [...rotasGoogle].sort((a, b) => nota(b) - nota(a) || a.segundos - b.segundos)
+    : ordem === "rapida" ? [...rotasGoogle].sort((a, b) => a.segundos - b.segundos)
+    : ordem === "curta" ? [...rotasGoogle].sort((a, b) => a.metros - b.metros)
+    : rotasGoogle;
   const selecionada = rotas.find((r) => r.id === escolhida) ?? rotas[0];
   const maisRapida = rotas.length > 1 ? rotas.reduce((a, b) => (b.segundos < a.segundos ? b : a)).id : null;
   const maisCurta = rotas.length > 1 ? rotas.reduce((a, b) => (b.metros < a.metros ? b : a)).id : null;
+  // Só destaca "Mais segura" quando alguma rota realmente se diferencia das outras.
+  const maisSegura = rotas.length > 1 && new Set(rotas.map(nota)).size > 1 ? rotas.reduce((a, b) => (nota(b) > nota(a) ? b : a)).id : null;
 
   const escolherSugestao = (texto: string) => {
     if (campoAtivo === "origem") setOrigem(texto);
@@ -90,7 +102,7 @@ export default function PlanRouteScreen({ onStartRun, onVerNoMapa, inicial, onUs
         </View>
 
         <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
-          {([["sugerida", "Sugerida"], ["rapida", "Mais rápida"], ["curta", "Mais curta"]] as const).map(([id, label]) => (
+          {([["sugerida", "Sugerida"], ["segura", "Mais segura"], ["rapida", "Mais rápida"], ["curta", "Mais curta"]] as const).map(([id, label]) => (
             <Chip key={id} label={label} ativo={ordem === id} onPress={() => { setOrdem(id); setEscolhida(-1); }} />
           ))}
         </View>
@@ -160,7 +172,8 @@ export default function PlanRouteScreen({ onStartRun, onVerNoMapa, inicial, onUs
 
             {rotas.map((rota, i) => {
               const ativa = selecionada.id === rota.id;
-              const etiquetas = [rota.id === maisRapida ? "Mais rápida" : null, rota.id === maisCurta ? "Mais curta" : null].filter(Boolean);
+              const detalhe = notas.get(rota.id);
+              const etiquetas = [rota.id === maisSegura ? "Mais segura" : null, rota.id === maisRapida ? "Mais rápida" : null, rota.id === maisCurta ? "Mais curta" : null].filter(Boolean);
               return (
                 <Pressable
                   key={rota.id}
@@ -176,6 +189,15 @@ export default function PlanRouteScreen({ onStartRun, onVerNoMapa, inicial, onUs
                 >
                   <Texto tamanho={16} peso="semibold">Rota {i + 1}{rota.descricao ? ` · via ${rota.descricao}` : ""}</Texto>
                   <Texto tamanho={12} cor={cores.muted}>{formatarDistancia(rota.metros)} · {formatarDuracao(rota.segundos)}</Texto>
+                  {detalhe && (
+                    <View style={{ gap: 6, marginTop: 8 }}>
+                      <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                        <Texto tamanho={12} peso="medium" cor={corDaNota(detalhe.nota)}>Segurança {detalhe.nota} · {rotuloDaNota(detalhe.nota)}</Texto>
+                        <Texto tamanho={12} cor={cores.muted}>{resumoDosAlertas(detalhe)}</Texto>
+                      </View>
+                      <Barra valor={detalhe.nota} cor={corDaNota(detalhe.nota)} />
+                    </View>
+                  )}
                   {etiquetas.length > 0 && (
                     <Texto tamanho={12} peso="medium" cor={cores.safety} style={{ marginTop: 4 }}>{etiquetas.join(" · ")}</Texto>
                   )}
@@ -184,7 +206,7 @@ export default function PlanRouteScreen({ onStartRun, onVerNoMapa, inicial, onUs
             })}
 
             <Texto tamanho={12} cor={cores.muted} style={{ paddingHorizontal: 4 }}>
-              Notas de segurança, trânsito, limpeza e conservação ainda não estão disponíveis.
+              A nota de segurança considera os alertas da comunidade a até 60 m do trajeto nos últimos 30 dias; alertas mais recentes e confirmados por curtidas pesam mais. Trânsito, limpeza e conservação ainda não estão disponíveis.
             </Texto>
 
             <Botao label={`Iniciar rota ${rotas.indexOf(selecionada) + 1}`} onPress={iniciar} style={{ marginTop: 4 }} />

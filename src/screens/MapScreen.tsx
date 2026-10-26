@@ -5,6 +5,7 @@ import { IconeBusca } from "../components/Icones";
 import MapaRotas from "../components/MapaRotas";
 import type { RotaReal } from "../hooks/useRotasReais";
 import usePosicao from "../hooks/usePosicao";
+import useAlertasLocalizados from "../hooks/useAlertasLocalizados";
 import useNomeDoLugar from "../hooks/useNomeDoLugar";
 import { formatarDistancia, formatarDuracao } from "../utils/formatar";
 
@@ -13,11 +14,14 @@ const PAINEL = { backgroundColor: "rgba(18,18,18,0.92)", borderWidth: 1, borderC
 interface Props {
   rota: RotaReal | null;
   onPlanejar: () => void;
+  // O mapa fica montado quando a aba está escondida; os alertas são buscados de novo ao voltar.
+  visivel: boolean;
 }
 
-export default function MapScreen({ rota, onPlanejar }: Props) {
+export default function MapScreen({ rota, onPlanejar, visivel }: Props) {
   const { posicao, permitido } = usePosicao();
   const lugar = useNomeDoLugar(posicao);
+  const alertas = useAlertasLocalizados(visivel);
   const textoLugar = permitido === false ? "Localização desativada" : lugar ?? "Localizando…";
 
   return (
@@ -40,7 +44,7 @@ export default function MapScreen({ rota, onPlanejar }: Props) {
 
       {/* Mapa */}
       <View style={{ flex: 1, overflow: "hidden", backgroundColor: cores.bg }}>
-        <MapaRotas rota={rota?.coords ?? null} posicao={posicao} />
+        <MapaRotas rota={rota?.coords ?? null} posicao={posicao} alertas={alertas} />
 
         {rota && (
           <View style={[PAINEL, { position: "absolute", top: 12, left: 12, paddingVertical: 8, paddingHorizontal: 12, gap: 2 }]}>

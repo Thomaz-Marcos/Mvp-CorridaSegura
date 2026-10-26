@@ -80,7 +80,7 @@ export default function App() {
             <>
               {/* O mapa fica montado e só é escondido: trocar de aba não recarrega o Google Maps (o WebView demora segundos para abrir). */}
               <View style={{ flex: 1, display: tab === "map" ? "flex" : "none" }}>
-                <MapScreen rota={rotaEscolhida} onPlanejar={() => setTab("plan")} />
+                <MapScreen rota={rotaEscolhida} onPlanejar={() => setTab("plan")} visivel={tab === "map"} />
               </View>
               {tab === "plan" && (
                 <PlanRouteScreen

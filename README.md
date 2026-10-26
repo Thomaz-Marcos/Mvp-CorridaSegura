@@ -2,7 +2,7 @@
 
 App mobile para corredores que ajuda a escolher rotas mais seguras na cidade. O corredor planeja trajetos a pé com rotas reais, acompanha a corrida em primeira pessoa e compartilha alertas com a comunidade sobre o que encontra pelo caminho.
 
-> **Status:** MVP funcional. Mapa, GPS, busca de rotas, login e feed de alertas já funcionam de verdade. Ainda falta o cálculo do score de segurança das rotas (veja [Próximos passos](#próximos-passos)).
+> **Status:** MVP funcional. Mapa, GPS, busca de rotas, login e feed de alertas já funcionam de verdade. As rotas já recebem uma nota de segurança calculada a partir dos alertas da comunidade (veja [Próximos passos](#próximos-passos)).
 
 ## Funcionalidades
 
@@ -11,7 +11,9 @@ App mobile para corredores que ajuda a escolher rotas mais seguras na cidade. O 
 - **Planejamento de rota** com busca de endereço (autocompletar) e rotas a pé reais, com alternativas (Google Routes API).
 - **Rotas favoritas** e **histórico de rotas**, salvos no aparelho.
 - **Corrida ativa** em primeira pessoa, com navegação curva a curva e gravação por GPS.
-- **Feed de alertas** da comunidade: publicar, curtir e apagar os próprios alertas (Supabase).
+- **Feed de alertas** da comunidade: publicar (com a localização atual), curtir e apagar os próprios alertas (Supabase).
+- **Alertas no mapa**: os alertas dos últimos 30 dias aparecem como pontos coloridos (perigo, atenção, positivo).
+- **Nota de segurança** de cada rota (0–100) e ordenação por "Mais segura": considera os alertas a até 60 m do trajeto; cada alerta perde metade do peso a cada 10 dias e pesa mais com curtidas. Veja [`src/utils/seguranca.ts`](src/utils/seguranca.ts).
 - **Perfil** com estatísticas das corridas gravadas.
 
 ## Telas
@@ -63,6 +65,8 @@ Sem as chaves do Supabase o app abre, mas o login e o feed avisam que não estã
 
 No **SQL Editor** do projeto, cole e execute uma vez o conteúdo de [`supabase/schema.sql`](supabase/schema.sql). Ele cria as tabelas de perfis, alertas e curtidas, o gatilho que gera o perfil no cadastro e as políticas de acesso (RLS).
 
+Se o banco já existia antes de os alertas terem localização, execute também [`supabase/migracao-alertas-localizacao.sql`](supabase/migracao-alertas-localizacao.sql). Alertas antigos ficam sem coordenadas e não entram no mapa nem na nota.
+
 ### 4. Iniciar
 
 ```bash
@@ -111,8 +115,9 @@ npx tsc --noEmit    # checagem de tipos
 - [x] Autenticação de usuários
 - [x] Backend para alertas da comunidade
 - [x] Gravação de corrida com GPS
-- [ ] Cálculo do score das rotas (segurança, trânsito, limpeza e conservação) a partir de dados reais
-- [ ] Alertas da comunidade exibidos no mapa e considerados na escolha da rota
+- [x] Alertas da comunidade exibidos no mapa e considerados na escolha da rota
+- [x] Nota de segurança das rotas a partir dos alertas
+- [ ] Notas de trânsito, limpeza e conservação a partir de dados reais
 - [ ] Botão de emergência durante a corrida
 
 ## Equipe
