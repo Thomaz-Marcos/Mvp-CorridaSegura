@@ -6,6 +6,16 @@ import { direcaoEmGraus } from "../utils/camera";
 // Ignora leituras com precisão pior que isso e saltos menores que o ruído do GPS.
 const PRECISAO_MAXIMA_M = 30;
 const PASSO_MINIMO_M = 3;
+// Acima desta velocidade (m/s) a direção vem do GPS; abaixo, parado ou andando devagar, vem da bússola.
+const VELOCIDADE_CORRENDO = 1.5;
+// Quanto tempo depois da última leitura "correndo" a bússola volta a valer.
+const ESPERA_BUSSOLA_MS = 3000;
+// A bússola oscila: cada leitura pesa só esta fração no valor suavizado (menor = mais estável, mais lento)...
+const SUAVIZACAO_BUSSOLA = 0.12;
+// ...e o rumo só muda quando o valor suavizado se afasta dele por mais que isto (graus).
+const RUIDO_BUSSOLA_GRAUS = 12;
+// Intervalo mínimo entre leituras da bússola usadas.
+const INTERVALO_BUSSOLA_MS = 150;
 
 // Grava a corrida: pede permissão, acompanha o GPS e soma a distância percorrida.
 // Enquanto estiver pausada o tempo para e as leituras do GPS são descartadas.
@@ -21,10 +31,13 @@ export default function useCorrida() {
 
   const pausadaRef = useRef(false);
   const ultimo = useRef<Coordenada | null>(null);
+  const ultimoCorrendo = useRef(0);
+  const rumoRef = useRef<number | null>(null);
 
   useEffect(() => {
     let ativo = true;
     let assinatura: Location.LocationSubscription | undefined;
+    let bussola: Location.LocationSubscription | undefined;
     (async () => {
       const { granted } = await Location.requestForegroundPermissionsAsync();
       if (!ativo) return;
@@ -40,8 +53,9 @@ export default function useCorrida() {
           ultimo.current = atual;
           setPosicao(atual);
           // heading vem como -1 ou null quando o aparelho está parado ou sem bússola; nesse caso mantém o último.
-          if (coords.heading != null && coords.heading >= 0) setRumo(coords.heading);
-          else if (anterior && distanciaEmMetros(anterior, atual) >= PASSO_MINIMO_M) setRumo(direcaoEmGraus(anterior, atual));
+          if (coords.speed != null && coords.speed >= VELOCIDADE_CORRENDO) ultimoCorrendo.current = Date.now();
+          if (coords.heading != null && coords.heading >= 0) definirRumo(coords.heading);
+          else if (anterior && distanciaEmMetros(anterior, atual) >= PASSO_MINIMO_M) definirRumo(direcaoEmGraus(anterior, atual));
           if (!anterior) {
             setTrajeto((t) => [...t, atual]);
             return;
@@ -55,11 +69,38 @@ export default function useCorrida() {
       );
       // Se a tela saiu antes de a assinatura ficar pronta, solta na hora.
       if (!ativo) assinatura.remove();
+
+      // Parado ou devagar o GPS não sabe para onde você aponta: aí vale a bússola do celular.
+      let suave: number | null = null;
+      let ultimaLeitura = 0;
+      bussola = await Location.watchHeadingAsync(({ trueHeading, magHeading, accuracy }) => {
+        const agora = Date.now();
+        if (pausadaRef.current || agora - ultimoCorrendo.current < ESPERA_BUSSOLA_MS) {
+          suave = null; // ao voltar a valer, recomeça da leitura atual
+          return;
+        }
+        // accuracy 0 = bússola sem calibração; a leitura não é confiável.
+        if (accuracy === 0 || agora - ultimaLeitura < INTERVALO_BUSSOLA_MS) return;
+        ultimaLeitura = agora;
+        const graus = trueHeading >= 0 ? trueHeading : magHeading;
+        // Média móvel pelo caminho mais curto do círculo (359° e 1° estão a 2° um do outro).
+        suave = suave == null ? graus : (suave + SUAVIZACAO_BUSSOLA * (((graus - suave + 540) % 360) - 180) + 360) % 360;
+        const atual = rumoRef.current;
+        const diferenca = atual == null ? 360 : Math.abs(((suave - atual + 540) % 360) - 180);
+        if (diferenca >= RUIDO_BUSSOLA_GRAUS) definirRumo(suave);
+      });
+      if (!ativo) bussola.remove();
     })().catch((e) => console.warn("GPS indisponível:", e?.message ?? e));
     return () => {
       ativo = false;
       assinatura?.remove();
+      bussola?.remove();
     };
+
+    function definirRumo(graus: number) {
+      rumoRef.current = graus;
+      setRumo(graus);
+    }
   }, []);
 
   useEffect(() => {
