@@ -25,6 +25,7 @@ import OnboardingScreen from "./src/screens/OnboardingScreen";
 import MapScreen from "./src/screens/MapScreen";
 import PlanRouteScreen from "./src/screens/PlanRouteScreen";
 import RouteScreen from "./src/screens/RouteScreen";
+import PlacesScreen from "./src/screens/PlacesScreen";
 import FeedScreen from "./src/screens/FeedScreen";
 import ProfileScreen from "./src/screens/ProfileScreen";
 import ActiveRunScreen from "./src/screens/ActiveRunScreen";
@@ -33,12 +34,13 @@ import type { RotaReal } from "./src/hooks/useRotasReais";
 
 const nomeDe = (s: Session) => (s.user.user_metadata?.nome as string | undefined) ?? "Corredor";
 
-type Tab = "map" | "plan" | "route" | "feed" | "profile";
+type Tab = "map" | "plan" | "route" | "places" | "feed" | "profile";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "map", label: "Mapa" },
   { id: "plan", label: "Planejar" },
   { id: "route", label: "Rotas" },
+  { id: "places", label: "Perto" },
   { id: "feed", label: "Feed" },
   { id: "profile", label: "Perfil" },
 ];
@@ -96,6 +98,7 @@ export default function App() {
                   onPlanejar={() => setTab("plan")}
                 />
               )}
+              {tab === "places" && <PlacesScreen />}
               {tab === "feed" && <FeedScreen usuarioId={sessao.user.id} />}
               {tab === "profile" && <ProfileScreen nome={nomeDe(sessao)} email={sessao.user.email ?? ""} />}
             </>

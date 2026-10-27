@@ -35,6 +35,53 @@ function decodificar(texto: string): Coordenada[] {
   return coords;
 }
 
+const CAMPOS = "routes.distanceMeters,routes.duration,routes.description,routes.polyline.encodedPolyline,routes.legs.steps.navigationInstruction,routes.legs.steps.distanceMeters,routes.legs.steps.endLocation";
+
+type RespostaRotas = {
+  routes?: {
+    distanceMeters?: number;
+    duration?: string;
+    description?: string;
+    polyline?: { encodedPolyline?: string };
+    legs?: { steps?: { navigationInstruction?: { maneuver?: string; instructions?: string }; distanceMeters?: number; endLocation?: { latLng?: Coordenada } }[] }[];
+  }[];
+};
+
+const paraRotas = (dados: RespostaRotas): RotaReal[] =>
+  (dados.routes ?? []).map((r, i) => ({
+    id: i,
+    metros: r.distanceMeters ?? 0,
+    segundos: parseInt(r.duration ?? "0", 10),
+    descricao: r.description ?? "",
+    coords: decodificar(r.polyline?.encodedPolyline ?? ""),
+    passos: (r.legs ?? [])
+      .flatMap((l) => l.steps ?? [])
+      .flatMap((p) =>
+        p.endLocation?.latLng
+          ? [{ instrucao: p.navigationInstruction?.instructions ?? "", manobra: p.navigationInstruction?.maneuver ?? "STRAIGHT", metros: p.distanceMeters ?? 0, fim: p.endLocation.latLng }]
+          : [],
+      ),
+  }));
+
+// A melhor rota a pé entre duas coordenadas (null se o Google não achar caminho).
+export async function rotaAte(origem: Coordenada, destino: Coordenada, sinal?: AbortSignal): Promise<RotaReal | null> {
+  const r = await fetch("https://routes.googleapis.com/directions/v2:computeRoutes", {
+    method: "POST",
+    signal: sinal,
+    headers: { "Content-Type": "application/json", "X-Goog-Api-Key": CHAVE, "X-Goog-FieldMask": CAMPOS },
+    body: JSON.stringify({
+      origin: { location: { latLng: origem } },
+      destination: { location: { latLng: destino } },
+      travelMode: "WALK",
+      languageCode: "pt-BR",
+      units: "METRIC",
+    }),
+  });
+  const dados = await r.json();
+  if (!r.ok) throw new Error(dados.error?.message ?? `Erro ${r.status}`);
+  return paraRotas(dados as RespostaRotas)[0] ?? null;
+}
+
 type Ponto = { address: string } | { location: { latLng: { latitude: number; longitude: number } } };
 
 function ponto(texto: string, posicao: Coordenada | null): Ponto | null {
@@ -63,7 +110,7 @@ export default function useRotasReais(origem: string, destino: string, ativo: bo
       headers: {
         "Content-Type": "application/json",
         "X-Goog-Api-Key": CHAVE,
-        "X-Goog-FieldMask": "routes.distanceMeters,routes.duration,routes.description,routes.polyline.encodedPolyline,routes.legs.steps.navigationInstruction,routes.legs.steps.distanceMeters,routes.legs.steps.endLocation",
+        "X-Goog-FieldMask": CAMPOS,
       },
       body: JSON.stringify({
         origin: origemPonto,
@@ -77,26 +124,10 @@ export default function useRotasReais(origem: string, destino: string, ativo: bo
       .then(async (r) => {
         const dados = await r.json();
         if (!r.ok) throw new Error(dados.error?.message ?? `Erro ${r.status}`);
-        return dados as { routes?: { distanceMeters?: number; duration?: string; description?: string; polyline?: { encodedPolyline?: string };
-          legs?: { steps?: { navigationInstruction?: { maneuver?: string; instructions?: string }; distanceMeters?: number; endLocation?: { latLng?: Coordenada } }[] }[];
-        }[];
-      };
+        return dados as RespostaRotas;
       })
       .then((dados) => {
-        const rotas = (dados.routes ?? []).map((r, i) => ({
-          id: i,
-          metros: r.distanceMeters ?? 0,
-          segundos: parseInt(r.duration ?? "0", 10),
-          descricao: r.description ?? "",
-          coords: decodificar(r.polyline?.encodedPolyline ?? ""),
-          passos: (r.legs ?? [])
-            .flatMap((l) => l.steps ?? [])
-            .flatMap((p) =>
-              p.endLocation?.latLng
-                ? [{ instrucao: p.navigationInstruction?.instructions ?? "", manobra: p.navigationInstruction?.maneuver ?? "STRAIGHT", metros: p.distanceMeters ?? 0, fim: p.endLocation.latLng }]
-                : [],
-            ),
-        }));
+        const rotas = paraRotas(dados);
         setResultado({ chave, rotas, erro: null });
       })
       .catch((e) => {
