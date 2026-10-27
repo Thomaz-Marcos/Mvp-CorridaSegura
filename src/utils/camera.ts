@@ -1,10 +1,15 @@
 import type { Coordenada } from "../data/coordenada";
 
-// Câmera em primeira pessoa: bem inclinada (67,5° é o máximo do Google Maps) e de perto.
-export const INCLINACAO_PRIMEIRA_PESSOA = 67;
-export const ZOOM_PRIMEIRA_PESSOA = 19;
+// Como a câmera acompanha o corredor: "seguir" gira para onde ele corre (primeira pessoa), "norte" deixa o norte para cima
+// e "rota" enquadra a rota inteira.
+export type ModoMapa = "seguir" | "norte" | "rota";
+
+// Câmera em primeira pessoa: inclinada, mas pouco (acima disso o mapa gira demais em cada curva e enjoa).
+export const INCLINACAO_PRIMEIRA_PESSOA = 45;
+export const ZOOM_PRIMEIRA_PESSOA = 18;
+export const ZOOM_NORTE_FIXO = 17.5;
 // O centro do mapa fica este tanto à frente do corredor, para ele aparecer na parte de baixo e o caminho à frente ocupar a tela.
-const ADIANTE_M = 40;
+const ADIANTE_M = 25;
 
 // Ponto a `metros` de distância de `origem` na direção `rumo` (graus, 0 = norte).
 export function pontoAdiante(origem: Coordenada, rumo: number, metros = ADIANTE_M): Coordenada {

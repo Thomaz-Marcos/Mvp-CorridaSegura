@@ -3,7 +3,7 @@ import { StyleSheet } from "react-native";
 import { WebView, type WebViewMessageEvent } from "react-native-webview";
 import type { Coordenada } from "../data/coordenada";
 import { cores } from "../theme";
-import { ESTILO_ESCURO } from "./estiloMapa";
+import { ESTILO_ESCURO, temaDoMapa, type TemaMapa } from "./estiloMapa";
 
 // Google Maps JavaScript dentro de um WebView. O mapa nativo do Android (react-native-maps) depende de
 // uma chave embutida no build e fica preto no Expo Go; assim a mesma chave e API da web funcionam no celular.
@@ -36,7 +36,7 @@ type Props = {
   camera?: Camera;
   centroInicial: Coordenada;
   zoomInicial: number;
-  // Mapa vetorial: permite girar e inclinar. Desliga o `styles` (o tema escuro vem do colorScheme).
+  // Mapa vetorial: permite girar e inclinar. Desliga o `styles` (o tema claro ou escuro vem do colorScheme).
   inclinavel?: boolean;
 };
 
@@ -58,7 +58,7 @@ function converter({ linhas, pontos, camera }: Pick<Props, "linhas" | "pontos" |
   });
 }
 
-function montarHtml(centro: Coordenada, zoom: number, inclinavel: boolean) {
+function montarHtml(centro: Coordenada, zoom: number, inclinavel: boolean, tema: TemaMapa) {
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -81,8 +81,8 @@ function montarHtml(centro: Coordenada, zoom: number, inclinavel: boolean) {
       center: ${JSON.stringify(latLng(centro))},
       zoom: ${zoom},
       ${inclinavel
-        ? `mapId: ${JSON.stringify(MAP_ID)}, renderingType: google.maps.RenderingType.VECTOR, colorScheme: google.maps.ColorScheme.DARK,`
-        : `styles: ${JSON.stringify(ESTILO_ESCURO)},`}
+        ? `mapId: ${JSON.stringify(MAP_ID)}, renderingType: google.maps.RenderingType.VECTOR, colorScheme: google.maps.ColorScheme.${tema === "claro" ? "LIGHT" : "DARK"},`
+        : `styles: ${JSON.stringify(tema === "claro" ? [] : ESTILO_ESCURO)},`}
       backgroundColor: '${cores.bg}',
       disableDefaultUI: true,
       gestureHandling: 'greedy',
@@ -177,7 +177,7 @@ export default function MapaGoogleWebView({ linhas, pontos, camera, centroInicia
   const estadoAtual = useRef(estado);
 
   // O HTML é montado uma vez; depois o app só manda o estado novo, sem recarregar (não reseta o zoom).
-  const source = useMemo(() => ({ html: montarHtml(centroInicial, zoomInicial, inclinavel) }), []); // eslint-disable-line react-hooks/exhaustive-deps
+  const source = useMemo(() => ({ html: montarHtml(centroInicial, zoomInicial, inclinavel, temaDoMapa()) }), []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const enviar = (json: string) => webview.current?.injectJavaScript(`window.aplicar(${json}); true;`);
 

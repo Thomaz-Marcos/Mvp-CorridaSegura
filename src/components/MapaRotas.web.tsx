@@ -6,7 +6,7 @@ import type { Coordenada } from "../data/coordenada";
 import { corDoAlerta } from "../utils/seguranca";
 import { cores } from "../theme";
 import { CENTRO_INICIAL, ZOOM_INICIAL } from "./centroInicial";
-import { ESTILO_ESCURO } from "./estiloMapa";
+import { ESTILO_ESCURO, temaDoMapa } from "./estiloMapa";
 
 // Na web o react-native-maps não funciona, então usamos o Google Maps JavaScript.
 // A chave precisa do prefixo EXPO_PUBLIC_ para chegar ao navegador.
@@ -23,7 +23,7 @@ export default function MapaRotas({ rota, posicao, alertas }: Props) {
         style={{ position: "absolute", inset: 0 }}
         defaultCenter={latLng(CENTRO_INICIAL)}
         defaultZoom={ZOOM_INICIAL}
-        styles={ESTILO_ESCURO}
+        styles={temaDoMapa() === "claro" ? undefined : ESTILO_ESCURO}
         backgroundColor={cores.bg}
         disableDefaultUI
         gestureHandling="greedy"

@@ -3,7 +3,8 @@ import { useEffect, useMemo } from "react";
 import { APIProvider, Map, Marker, Polyline, useMap } from "@vis.gl/react-google-maps";
 import type { Coordenada } from "../data/coordenada";
 import { cores } from "../theme";
-import { cameraDaRota, INCLINACAO_PRIMEIRA_PESSOA, pontoAdiante, ZOOM_PRIMEIRA_PESSOA } from "../utils/camera";
+import { temaDoMapa } from "./estiloMapa";
+import { cameraDaRota, INCLINACAO_PRIMEIRA_PESSOA, pontoAdiante, ZOOM_NORTE_FIXO, ZOOM_PRIMEIRA_PESSOA, type ModoMapa } from "../utils/camera";
 import { CENTRO_INICIAL, ZOOM_INICIAL } from "./centroInicial";
 import { ICONE_CORREDOR, TAMANHO_ICONE_CORREDOR } from "./iconeCorredor";
 
@@ -13,9 +14,9 @@ const MAP_ID = process.env.EXPO_PUBLIC_GOOGLE_MAPS_MAP_ID ?? "DEMO_MAP_ID";
 
 const latLng = ({ latitude, longitude }: Coordenada) => ({ lat: latitude, lng: longitude });
 
-type Props = { posicao: Coordenada | null; rumo: number | null; trajeto: Coordenada[]; rota: Coordenada[]; visaoGeral: boolean; permitido: boolean | null };
+type Props = { posicao: Coordenada | null; rumo: number | null; trajeto: Coordenada[]; rota: Coordenada[]; modo: ModoMapa; permitido: boolean | null };
 
-export default function MapaCorrida({ posicao, rumo, trajeto, rota, visaoGeral }: Props) {
+export default function MapaCorrida({ posicao, rumo, trajeto, rota, modo }: Props) {
   return (
     <APIProvider apiKey={CHAVE}>
       <Map
@@ -24,18 +25,18 @@ export default function MapaCorrida({ posicao, rumo, trajeto, rota, visaoGeral }
         defaultZoom={ZOOM_INICIAL}
         mapId={MAP_ID}
         renderingType={"VECTOR" as google.maps.RenderingType}
-        colorScheme="DARK"
+        colorScheme={temaDoMapa() === "claro" ? "LIGHT" : "DARK"}
         backgroundColor={cores.bg}
         disableDefaultUI
         gestureHandling="greedy"
       >
-        <Conteudo posicao={posicao} rumo={rumo} trajeto={trajeto} rota={rota} visaoGeral={visaoGeral} />
+        <Conteudo posicao={posicao} rumo={rumo} trajeto={trajeto} rota={rota} modo={modo} />
       </Map>
     </APIProvider>
   );
 }
 
-function Conteudo({ posicao, rumo, trajeto, rota, visaoGeral }: { posicao: Coordenada | null; rumo: number | null; trajeto: Coordenada[]; rota: Coordenada[]; visaoGeral: boolean }) {
+function Conteudo({ posicao, rumo, trajeto, rota, modo }: { posicao: Coordenada | null; rumo: number | null; trajeto: Coordenada[]; rota: Coordenada[]; modo: ModoMapa }) {
   const mapa = useMap();
   const inicio = useMemo(() => cameraDaRota(rota), [rota]);
   const ondeEstou = posicao ?? inicio?.posicao;
@@ -43,7 +44,7 @@ function Conteudo({ posicao, rumo, trajeto, rota, visaoGeral }: { posicao: Coord
   // Visão geral enquadra a rota toda; fora dela a câmera fica em primeira pessoa (sem GPS, no início da rota).
   useEffect(() => {
     if (!mapa) return;
-    if (visaoGeral && rota.length > 1) {
+    if (modo === "rota" && rota.length > 1) {
       const limites = new google.maps.LatLngBounds();
       rota.forEach((c) => limites.extend(latLng(c)));
       if (mapa.getHeading() || mapa.getTilt()) mapa.moveCamera({ heading: 0, tilt: 0 });
@@ -52,9 +53,13 @@ function Conteudo({ posicao, rumo, trajeto, rota, visaoGeral }: { posicao: Coord
     }
     const base = ondeEstou;
     if (!base) return;
+    if (modo === "norte") {
+      mapa.moveCamera({ center: latLng(base), zoom: ZOOM_NORTE_FIXO, heading: 0, tilt: 0 });
+      return;
+    }
     const graus = rumo ?? inicio?.rumo ?? 0;
     mapa.moveCamera({ center: latLng(pontoAdiante(base, graus)), zoom: ZOOM_PRIMEIRA_PESSOA, heading: graus, tilt: INCLINACAO_PRIMEIRA_PESSOA });
-  }, [mapa, ondeEstou, inicio, rumo, rota, visaoGeral]);
+  }, [mapa, ondeEstou, inicio, rumo, rota, modo]);
 
   return (
     <>
