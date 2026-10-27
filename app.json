@@ -30,6 +30,14 @@
         {
           "locationWhenInUsePermission": "O Pace usa sua localização para mostrar você no mapa e as rotas próximas."
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "O Pace usa suas fotos para anexar imagens aos alertas.",
+          "cameraPermission": "O Pace usa a câmera para fotografar o que você quer avisar.",
+          "microphonePermission": false
+        }
       ]
     ],
     "backgroundColor": "#0d0d12",

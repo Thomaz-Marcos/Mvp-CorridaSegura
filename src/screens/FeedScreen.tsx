@@ -1,11 +1,12 @@
+import * as ImagePicker from "expo-image-picker";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, RefreshControl, ScrollView, TextInput, View } from "react-native";
+import { ActivityIndicator, Alert, Image, Pressable, RefreshControl, ScrollView, TextInput, View } from "react-native";
 import { cores, fontes } from "../theme";
 import Texto from "../components/Texto";
 import Chip from "../components/Chip";
 import Botao from "../components/Botao";
 import { IconeCoracao, IconeMais, IconeVoltar } from "../components/Icones";
-import { alternarCurtida, apagarAlerta, lerAlertas, publicarAlerta, type Alerta, type TipoAlerta } from "../data/alertas";
+import { alternarCurtida, apagarAlerta, lerAlertas, publicarAlerta, type Alerta, type FotoEscolhida, type TipoAlerta } from "../data/alertas";
 import { supabaseConfigurado } from "../lib/supabase";
 import usePosicao from "../hooks/usePosicao";
 import useNomeDoLugar from "../hooks/useNomeDoLugar";
@@ -40,6 +41,7 @@ export default function FeedScreen({ usuarioId }: Props) {
   const [showCompose, setShowCompose] = useState(false);
   const [tipo, setTipo] = useState<TipoAlerta>("danger");
   const [texto, setTexto] = useState("");
+  const [foto, setFoto] = useState<FotoEscolhida | null>(null);
   const [filtro, setFiltro] = useState<TipoAlerta | null>(null);
   const [alertas, setAlertas] = useState<Alerta[] | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -73,8 +75,9 @@ export default function FeedScreen({ usuarioId }: Props) {
     if (texto.trim() === "" || publicando) return;
     setPublicando(true);
     try {
-      await publicarAlerta({ tipo, texto, local: lugar, posicao });
+      await publicarAlerta({ tipo, texto, local: lugar, posicao, foto });
       setTexto("");
+      setFoto(null);
       setShowCompose(false);
       aplicar(await buscar());
     } catch (e) {
@@ -104,13 +107,34 @@ export default function FeedScreen({ usuarioId }: Props) {
         style: "destructive",
         onPress: async () => {
           try {
-            await apagarAlerta(a.id);
+            await apagarAlerta(a.id, a.fotoCaminho);
             setAlertas((atuais) => atuais?.filter((x) => x.id !== a.id) ?? null);
           } catch (e) {
             Alert.alert("Não foi possível apagar", e instanceof Error ? e.message : "Tente de novo.");
           }
         },
       },
+    ]);
+
+  const escolherFoto = async (origem: "camera" | "galeria") => {
+    const opcoes: ImagePicker.ImagePickerOptions = { mediaTypes: ["images"], quality: 0.7 };
+    try {
+      if (origem === "camera") {
+        const permissao = await ImagePicker.requestCameraPermissionsAsync();
+        if (!permissao.granted) return Alert.alert("Sem acesso à câmera", "Libere a câmera nas configurações do aparelho.");
+      }
+      const r = origem === "camera" ? await ImagePicker.launchCameraAsync(opcoes) : await ImagePicker.launchImageLibraryAsync(opcoes);
+      if (!r.canceled && r.assets[0]) setFoto({ uri: r.assets[0].uri, mimeType: r.assets[0].mimeType });
+    } catch (e) {
+      Alert.alert("Não foi possível abrir a foto", e instanceof Error ? e.message : "Tente de novo.");
+    }
+  };
+
+  const adicionarFoto = () =>
+    Alert.alert("Adicionar foto", undefined, [
+      { text: "Tirar foto", onPress: () => escolherFoto("camera") },
+      { text: "Escolher da galeria", onPress: () => escolherFoto("galeria") },
+      { text: "Cancelar", style: "cancel" },
     ]);
 
   const visiveis = (alertas ?? []).filter((a) => filtro === null || a.tipo === filtro);
@@ -174,6 +198,25 @@ export default function FeedScreen({ usuarioId }: Props) {
               borderColor: cores.border,
             }}
           />
+          {foto ? (
+            <View>
+              <Image source={{ uri: foto.uri }} style={{ width: "100%", height: 200, borderRadius: 10, backgroundColor: cores.surface }} resizeMode="cover" />
+              <Pressable
+                onPress={() => setFoto(null)}
+                hitSlop={8}
+                style={{ position: "absolute", top: 8, right: 8, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, backgroundColor: "rgba(0,0,0,0.65)" }}
+              >
+                <Texto tamanho={12} peso="medium">Remover</Texto>
+              </Pressable>
+            </View>
+          ) : (
+            <Pressable
+              onPress={adicionarFoto}
+              style={{ paddingVertical: 12, borderRadius: 10, borderWidth: 1, borderColor: cores.border, alignItems: "center" }}
+            >
+              <Texto tamanho={13} peso="medium" cor={cores.muted}>Adicionar foto</Texto>
+            </Pressable>
+          )}
           <Texto tamanho={12} cor={cores.muted}>{posicao ? `Local: ${lugar ?? "posição atual"}` : "Sem localização: o alerta não aparece no mapa nem conta na nota das rotas."}</Texto>
           <Botao label={publicando ? "Publicando…" : "Publicar"} onPress={publicar} />
         </View>
@@ -237,6 +280,10 @@ export default function FeedScreen({ usuarioId }: Props) {
                   </View>
 
                   <Texto tamanho={14} style={{ lineHeight: 21 }}>{a.texto}</Texto>
+
+                  {a.fotoUrl && (
+                    <Image source={{ uri: a.fotoUrl }} style={{ width: "100%", height: 220, borderRadius: 10, backgroundColor: cores.surface }} resizeMode="cover" />
+                  )}
 
                   <Pressable onPress={() => curtir(a)} hitSlop={8} style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 2, alignSelf: "flex-start" }}>
                     <IconeCoracao cor={a.curtido ? cores.danger : cores.muted} cheio={a.curtido} />

@@ -28,6 +28,7 @@ create table public.alertas (
   local text,
   latitude double precision check (latitude between -90 and 90),
   longitude double precision check (longitude between -180 and 180),
+  foto_caminho text,
   criado_em timestamptz not null default now(),
   check ((latitude is null) = (longitude is null))
 );
@@ -55,9 +56,11 @@ create policy "descurtir a propria curtida" on public.curtidas for delete to aut
 -- Feed pronto: alerta + nome do autor + total de curtidas + se EU curti.
 create view public.feed with (security_invoker = true) as
 select
-  a.id, a.tipo, a.texto, a.local, a.latitude, a.longitude, a.criado_em, a.autor_id,
+  a.id, a.tipo, a.texto, a.local, a.latitude, a.longitude, a.criado_em, a.autor_id, a.foto_caminho,
   p.nome as autor_nome,
   (select count(*) from public.curtidas c where c.alerta_id = a.id)::int as curtidas,
   exists (select 1 from public.curtidas c where c.alerta_id = a.id and c.usuario_id = auth.uid()) as curtido
 from public.alertas a
 join public.perfis p on p.id = a.autor_id;
+
+-- Fotos dos alertas: bucket e políticas estão em migracao-alertas-foto.sql (rode depois deste arquivo).
